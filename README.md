@@ -136,7 +136,17 @@ See [examples/sample-plan.md](examples/sample-plan.md) for a representative expo
 
 ## The interface
 
-**Two stages.** You pick a client first, then get the full file — rather than landing in a dense form with nothing loaded.
+**A queue, not a wall of fields.** You pick a client first, then move through one stage at a time — rather than landing in a dense form with nothing loaded.
+
+```text
+Pick a client  →  01 Client file  →  02 Goals  →  03 Review & convene  →  04 The ruling
+```
+
+Each stage gates the next and says why it is blocked: no discretionary income left to allocate, or no goal with a horizon for the investment agent to argue for. The stepper is clickable for anything already cleared, so going back to change a figure never means starting over.
+
+**Goals are yours to define.** Pick from a 23-goal catalogue grouped by kind — safety, debt, home & vehicle, family, growth, work & life — or name a custom one. The catalogue's horizon is only a starting suggestion: **months are editable on every goal**, along with an optional target amount. That number matters, because the shortest horizon is exactly what the coordinator arbitrates against — set a goal inside two years and you can watch the rule gap open up on any persona.
+
+**The ruling is last, and it leads in plain words.** The final stage opens with the monthly plan as three amounts, each with a one-line reason written from that household's actual figures, the call that had to be made, what happens if they hold it, and the code-side check restated in a sentence. The full working — conflict, rules applied, concessions, guardrail table, negotiation ledger — sits underneath behind one disclosure, complete but out of the way.
 
 **Four cases ship with it**, each chosen to exercise a different path through the rules:
 

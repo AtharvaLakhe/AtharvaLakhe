@@ -570,6 +570,84 @@ details.about code{font-family:var(--mono);font-size:10.5px;background:var(--yel
   transition:opacity .2s,transform .2s;z-index:200}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
+/* ============================================================== QUEUE */
+.stepper{display:flex;list-style:none;margin:0;padding:0;flex-wrap:wrap}
+.stepper li{display:flex}
+.stepper button{
+  display:flex;align-items:center;gap:9px;cursor:pointer;font:inherit;
+  padding:9px 15px;border:1.5px solid var(--grid);border-right:0;
+  background:var(--paper);color:var(--ink-2);font-size:12px;font-weight:700;
+}
+.stepper li:first-child button{border-radius:9px 0 0 9px}
+.stepper li:last-child button{border-right:1.5px solid var(--grid);border-radius:0 9px 9px 0}
+.stepper button[disabled]{cursor:not-allowed;opacity:.62}
+.stepper .k{
+  width:21px;height:21px;border-radius:50%;display:grid;place-items:center;flex:none;
+  font-family:var(--mono);font-size:10px;font-weight:800;
+  border:1.5px solid var(--grid);background:var(--paper-2);
+}
+.stepper li.done button{color:var(--ink)}
+.stepper li.done .k{background:var(--c-ef);color:var(--paper);border-color:var(--c-ef)}
+.stepper li.now button{background:var(--yel);color:var(--on-yel);border-color:var(--bd)}
+.stepper li.now .k{background:var(--on-yel);color:var(--yel);border-color:var(--on-yel)}
+@media (max-width:700px){.stepper button span.t{display:none}.stepper button{padding:9px 12px}}
+
+.stepq{display:none}
+.stepq.on{display:block}
+.stepnav{
+  display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between;
+  border-top:1.5px solid var(--grid);padding-top:15px;margin-top:6px;
+}
+.stepnav .grp{display:flex;gap:9px;flex-wrap:wrap}
+.stepnav .hintmsg{font-size:12px;font-weight:600;color:var(--ink-2);max-width:52ch}
+.stepnav .hintmsg.warn{color:var(--c-debt)}
+
+.addgoal{display:flex;gap:11px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px}
+.goalrow{
+  display:grid;grid-template-columns:1fr 96px 132px auto;gap:10px;align-items:center;
+  padding:9px 11px;border:1.5px solid var(--grid);border-radius:8px;
+  margin-bottom:7px;background:var(--paper-2);
+}
+.goalrow.near{border-color:var(--c-debt);background:var(--c-debt-w)}
+.goalrow .gl{font-size:12.5px;font-weight:700;min-width:0}
+.goalrow .gl small{display:block;font-family:var(--mono);font-size:9.5px;font-weight:600;color:var(--ink-2)}
+.goalrow input{padding:5px 8px;font-size:11.5px}
+.goalrow .gcap{font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+@media (max-width:640px){.goalrow{grid-template-columns:1fr auto}.goalrow .gcap{display:none}}
+
+/* ------------------------------------------------- plain-language ruling */
+.plain{
+  border:2px solid var(--bd);border-radius:12px;background:var(--paper);
+  box-shadow:7px 7px 0 0 var(--sh);overflow:hidden;margin-bottom:18px;
+}
+.plain-hd{padding:15px 18px;background:var(--yel);color:var(--on-yel);border-bottom:2px solid var(--bd)}
+.plain-hd h2{font-size:21px}
+.plain-hd p{font-size:12.5px;font-weight:600;margin-top:4px}
+.plain-bd{padding:17px 18px;display:flex;flex-direction:column;gap:15px}
+.pline{
+  display:grid;grid-template-columns:minmax(130px,auto) 1fr;gap:16px;align-items:baseline;
+  padding-bottom:13px;border-bottom:1.5px solid var(--grid);
+}
+.pline:last-of-type{border-bottom:0;padding-bottom:0}
+.pamt{font-family:var(--mono);font-size:25px;font-weight:800;letter-spacing:-.045em}
+.pamt small{display:block;font-family:var(--sans);font-size:10px;font-weight:800;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-2);margin-top:2px}
+.p-ef .pamt{color:var(--c-ef)} .p-debt .pamt{color:var(--c-debt)} .p-inv .pamt{color:var(--c-inv)}
+.pw b{display:block;font-size:13.5px;margin-bottom:3px}
+.pw span{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.pcall{border:1.5px solid var(--c-debt);background:var(--c-debt-w);border-radius:9px;
+  padding:12px 14px;font-size:13px;line-height:1.5;font-weight:500}
+.pcall b{font-weight:800}
+.pnext{border:1.5px solid var(--grid);border-radius:9px;padding:12px 14px;
+  font-size:12.5px;line-height:1.5;font-weight:500;background:var(--paper-2)}
+.pok{display:flex;align-items:center;gap:11px;font-size:12.5px;font-weight:700}
+.pok .m{width:23px;height:23px;border-radius:6px;display:grid;place-items:center;flex:none;
+  background:var(--ok);color:var(--paper);font-weight:800;font-size:13px}
+.pok.bad .m{background:var(--c-debt)}
+.fullwork{border:1.5px solid var(--grid);border-radius:10px;padding:13px 15px;background:var(--paper)}
+.fullwork summary{cursor:pointer;font-weight:800;font-size:13px}
+.fullwork .fw{margin-top:16px;display:flex;flex-direction:column;gap:20px}
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
 }
@@ -623,10 +701,12 @@ details.about code{font-family:var(--mono);font-size:10.5px;background:var(--yel
 
   <div class="wrap">
 
-    <!-- 1 · client file -->
-    <section>
+    <ol class="stepper" id="stepper" aria-label="Steps"></ol>
+
+    <!-- STEP 1 · client file -->
+    <section class="stepq on" id="step-file">
       <div class="sec-hd"><span class="n">01</span><h2>Client file</h2>
-        <span class="sub">Edit anything — discretionary income recalculates as you type.</span></div>
+        <span class="sub">Money in, money already committed. Discretionary income recalculates as you type.</span></div>
       <div class="bx bx-lg profile">
         <div class="pgrid" style="margin-bottom:14px">
           <div class="field"><label for="f-name">Client</label><input type="text" id="f-name"></div>
@@ -647,24 +727,49 @@ details.about code{font-family:var(--mono);font-size:10.5px;background:var(--yel
         </table>
         <button class="btn btn-sm" id="btn-add-debt" style="margin:2px 0 16px">+ Add account</button>
 
-        <div class="pgrid" style="margin-bottom:14px">
-          <div class="field" style="grid-column:1/-1">
-            <span class="lbl">Goals — horizon in months</span>
-            <div class="chips" id="goal-chips"></div>
-          </div>
-          <div class="field" style="grid-column:1/-1;max-width:420px">
-            <label for="f-risk">Risk tolerance — <span id="risk-lbl" class="num"></span></label>
-            <input type="range" id="f-risk" min="1" max="10" step="1">
-          </div>
-        </div>
-
         <div class="tally" id="tally"></div>
       </div>
     </section>
 
-    <!-- 2 · debt field -->
-    <section id="sec-debt">
-      <div class="sec-hd"><span class="n">02</span><h2>What is owed</h2>
+    <!-- STEP 2 · goals -->
+    <section class="stepq" id="step-goals">
+      <div class="sec-hd"><span class="n">02</span><h2>Goals</h2>
+        <span class="sub">What is this household saving for, and by when. The horizon you set here is what the coordinator arbitrates against.</span></div>
+      <div class="bx bx-lg profile">
+        <div class="addgoal">
+          <div class="field" style="flex:1;min-width:200px">
+            <label for="goal-pick">Add a goal</label>
+            <select id="goal-pick"></select>
+          </div>
+          <div class="field" id="wrap-custom" style="flex:1;min-width:170px;display:none">
+            <label for="goal-custom">Name it</label>
+            <input type="text" id="goal-custom" placeholder="e.g. Studio deposit">
+          </div>
+          <div class="field" style="width:104px">
+            <label for="goal-months">Months</label>
+            <input type="number" id="goal-months" min="1" max="600" step="1" value="24">
+          </div>
+          <div class="field" style="width:140px">
+            <label for="goal-amt">Target amount</label>
+            <input type="number" id="goal-amt" min="0" step="1000" placeholder="optional">
+          </div>
+          <button class="btn btn-sm btn-y" id="btn-add-goal">+ Add goal</button>
+        </div>
+
+        <div id="goal-list"></div>
+
+        <div class="field" style="max-width:440px;margin-top:16px">
+          <label for="f-risk">Risk tolerance — <span id="risk-lbl" class="num"></span></label>
+          <input type="range" id="f-risk" min="1" max="10" step="1">
+          <div class="range-scale" style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink-2)">
+            <span>Capital preservation</span><span>Growth seeking</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 3 · review and convene -->
+    <section class="stepq" id="step-review">
+      <div class="sec-hd"><span class="n">03</span><h2>What is owed</h2>
         <span class="sub">Bar length is the balance; fill depth is the interest rate. Re-sort to see what each rule sees.</span></div>
       <div class="bx bx-lg" style="padding:15px">
         <div class="field-hd">
@@ -679,30 +784,30 @@ details.about code{font-family:var(--mono);font-size:10.5px;background:var(--yel
         </div>
         <div id="cdetail"></div>
       </div>
-    </section>
 
-    <!-- 3 · proposals -->
-    <section>
-      <div class="sec-hd"><span class="n">03</span><h2>The proposals</h2>
+      <div class="sec-hd" style="margin-top:24px"><h2>The proposals</h2>
         <span class="sub">Three agents, three competing claims on the same money.</span></div>
       <div class="agents" id="agents"></div>
     </section>
 
-    <!-- 4 · ruling -->
-    <section>
+    <!-- STEP 4 · the ruling -->
+    <section class="stepq" id="step-ruling">
       <div class="sec-hd"><span class="n">04</span><h2>The ruling</h2>
-        <span class="sub">The coordinator is forbidden from averaging. It must name the conflict and cite a rule.</span></div>
+        <span class="sub">The plan in plain terms, with the full working underneath.</span></div>
+
+      <div id="plain"></div>
+
+      <details class="fullwork" id="fullwork">
+        <summary>Show the full working — conflict, rules, concessions, guardrails, ledger</summary>
+        <div class="fw">
       <div class="ruling" id="ruling">
         <div class="ruling-hd"><h2>Coordinator</h2><span class="stat-b" id="coord-badge"><span class="led"></span>idle</span></div>
         <div class="ruling-bd" id="ruling-bd">
           <p class="ph">Convene the board to begin. The three specialists table proposals first; the coordinator rules after.</p>
         </div>
       </div>
-    </section>
 
-    <!-- 5 · ledger + rules -->
-    <section>
-      <div class="sec-hd"><span class="n">05</span><h2>Audit trail</h2>
+      <div class="sec-hd"><h2>Audit trail</h2>
         <span class="sub">Every proposal, conflict and rule application, in the order it happened.</span></div>
       <div class="two">
         <div class="bx bx-lg ledbox">
@@ -723,7 +828,11 @@ details.about code{font-family:var(--mono);font-size:10.5px;background:var(--yel
           <div style="display:flex;flex-direction:column;gap:9px" id="rules-ref"></div>
         </div>
       </div>
+        </div>
+      </details>
     </section>
+
+    <div class="stepnav" id="stepnav"></div>
   </div>
 </div>
 
@@ -747,17 +856,40 @@ const RULES = {
     text:"Extra debt payment + emergency fund contribution + investing can never exceed actual discretionary income. If the three proposals sum above it, scale every component proportionally until the total fits. Discretionary income is a wall, not a target." }
 };
 
+/* Catalogue for the goal picker. `months` is only a starting suggestion —
+   the horizon is the user's to set, and it is what the coordinator actually
+   arbitrates against, so it stays editable on every goal that is added. */
 const GOAL_VOCAB = [
-  { id:"buffer",     label:"Income stability buffer", months:12 },
-  { id:"debtfree",   label:"Debt-free",               months:36 },
-  { id:"wedding",    label:"Wedding",                 months:18 },
-  { id:"house",      label:"House down payment",      months:60 },
-  { id:"relocate",   label:"Relocation",              months:18 },
-  { id:"gear",       label:"Equipment upgrade",       months:24 },
-  { id:"travel",     label:"Travel fund",             months:24 },
-  { id:"child",      label:"Child's education",       months:180 },
-  { id:"retirement", label:"Retirement",              months:360 }
+  { g:"Safety",        id:"buffer",     label:"Income stability buffer", months:12 },
+  { g:"Safety",        id:"emergency",  label:"Full emergency fund",     months:24 },
+  { g:"Safety",        id:"insurance",  label:"Insurance top-up",        months:12 },
+
+  { g:"Debt",          id:"debtfree",   label:"Debt-free",               months:36 },
+  { g:"Debt",          id:"cardclear",  label:"Clear credit cards",      months:18 },
+  { g:"Debt",          id:"loanclose",  label:"Close a specific loan",   months:24 },
+
+  { g:"Home & vehicle",id:"house",      label:"House down payment",      months:60 },
+  { g:"Home & vehicle",id:"homeloan",   label:"Home loan prepayment",    months:84 },
+  { g:"Home & vehicle",id:"reno",       label:"Home renovation",         months:24 },
+  { g:"Home & vehicle",id:"vehicle",    label:"Vehicle purchase",        months:36 },
+  { g:"Home & vehicle",id:"relocate",   label:"Relocation",              months:18 },
+
+  { g:"Family",        id:"wedding",    label:"Wedding",                 months:18 },
+  { g:"Family",        id:"child",      label:"Child's education",       months:180 },
+  { g:"Family",        id:"childbirth", label:"New child",               months:12 },
+  { g:"Family",        id:"parents",    label:"Supporting parents",      months:60 },
+
+  { g:"Growth",        id:"retirement", label:"Retirement",              months:360 },
+  { g:"Growth",        id:"fire",       label:"Financial independence",  months:240 },
+  { g:"Growth",        id:"study",      label:"Further study",           months:36 },
+  { g:"Growth",        id:"sabbatical", label:"Career break",            months:30 },
+
+  { g:"Work & life",   id:"business",   label:"Start a business",        months:36 },
+  { g:"Work & life",   id:"gear",       label:"Equipment upgrade",       months:24 },
+  { g:"Work & life",   id:"travel",     label:"Travel fund",             months:24 },
+  { g:"Work & life",   id:"gift",       label:"Large one-off purchase",  months:12 }
 ];
+const GOAL_GROUPS = [...new Set(GOAL_VOCAB.map(g => g.g))];
 
 const PERSONAS = [
   { key:"debt-heavy", tag:"CASE 01", hook:"Sharpest conflict",
@@ -765,7 +897,9 @@ const PERSONAS = [
     name:"Rhea Kulkarni", age:29, currency:"INR", stability:"steady",
     occupation:"Product designer · Pune",
     income:105000, essentials:52000, ef:40000, efTarget:312000, risk:6,
-    goals:["retirement","house","debtfree"],
+    goals:[ { id:"retirement", label:"Retirement", months:360 },
+            { id:"house", label:"House down payment", months:60, amount:1500000 },
+            { id:"debtfree", label:"Debt-free", months:36 } ],
     debts:[ { name:"Credit card", balance:185000, apr:41, min:9250 },
             { name:"Consumer durable EMI", balance:38000, apr:18, min:3400 },
             { name:"Education loan", balance:460000, apr:9.2, min:6800 } ] },
@@ -775,7 +909,9 @@ const PERSONAS = [
     name:"Devansh Rao", age:34, currency:"INR", stability:"variable",
     occupation:"Freelance cinematographer · Goa",
     income:140000, essentials:58000, ef:45000, efTarget:580000, risk:4,
-    goals:["buffer","gear","retirement"],
+    goals:[ { id:"buffer", label:"Income stability buffer", months:10 },
+            { id:"gear", label:"Equipment upgrade", months:24, amount:350000 },
+            { id:"retirement", label:"Retirement", months:312 } ],
     debts:[ { name:"Camera gear loan", balance:320000, apr:13.5, min:11000 },
             { name:"Personal loan", balance:90000, apr:11, min:4200 } ] },
 
@@ -784,7 +920,9 @@ const PERSONAS = [
     name:"Aisha & Neil Fernandes", age:32, currency:"INR", stability:"steady",
     occupation:"Dual income · Bengaluru",
     income:230000, essentials:105000, ef:340000, efTarget:630000, risk:7,
-    goals:["wedding","retirement","travel"],
+    goals:[ { id:"wedding", label:"Wedding", months:18, amount:1200000 },
+            { id:"retirement", label:"Retirement", months:336 },
+            { id:"travel", label:"Travel fund", months:24, amount:250000 } ],
     debts:[ { name:"Car loan", balance:540000, apr:9.5, min:14500 },
             { name:"Home reno loan", balance:210000, apr:10.75, min:6000 } ] },
 
@@ -793,7 +931,7 @@ const PERSONAS = [
     name:"New client", age:30, currency:"INR", stability:"steady",
     occupation:"—",
     income:90000, essentials:45000, ef:20000, efTarget:270000, risk:5,
-    goals:["retirement"],
+    goals:[ { id:"retirement", label:"Retirement", months:360 } ],
     debts:[ { name:"Personal loan", balance:120000, apr:14, min:5000 } ] }
 ];
 
@@ -823,6 +961,7 @@ const state = {
   plan:null, guardrails:null, projection:null,
   ledger:[], expanded:new Set(), ledgerFilter:"all",
   sort:"apr", view:"chart", selectedDebt:null,
+  step:"file", maxStep:0,
   mode:"local", running:false
 };
 
@@ -840,6 +979,7 @@ function loadPersona(key){
   state.personaKey = key;
   state.profile = clone(p);
   state.selectedDebt = null;
+  state.step = "file"; state.maxStep = 0;
   resetRun();
   showWorkspace();
 }
@@ -856,11 +996,11 @@ function cheapDebts(p){ return p.debts.filter(d => +d.apr < 10); }
 function efGap(p){ return Math.max(0, Math.round((+p.essentials||0) - (+p.ef||0))); }
 function totalDebt(p){ return p.debts.reduce((s,d) => s + (+d.balance||0), 0); }
 function shortestHorizon(p){
-  const h = p.goals.map(g => (GOAL_VOCAB.find(v => v.id===g)||{}).months).filter(Boolean);
+  const h = p.goals.map(g => +g.months).filter(m => m > 0);
   return h.length ? Math.min(...h) : 120;
 }
 function longestHorizon(p){
-  const h = p.goals.map(g => (GOAL_VOCAB.find(v => v.id===g)||{}).months).filter(Boolean);
+  const h = p.goals.map(g => +g.months).filter(m => m > 0);
   return h.length ? Math.max(...h) : 120;
 }
 
@@ -955,7 +1095,7 @@ function profileBlock(p){
     `Total contractual minimums: ${fmt(minTotal(p))}/mo`,
     `DISCRETIONARY INCOME (income - essentials - minimums) = ${fmt(discretionary(p))}/mo  <- the only pool being allocated`,
     `Emergency fund: ${fmt(p.ef)} now, target ${fmt(p.efTarget)} (one month of essentials = ${fmt(p.essentials)})`,
-    `Goals: ${p.goals.map(g => { const v = GOAL_VOCAB.find(z => z.id===g); return v ? `${v.label} (~${v.months} months out)` : g; }).join("; ") || "none stated"}`,
+    `Goals: ${p.goals.map(g => `${g.label} (~${g.months} months out${g.amount ? ", target " + fmt(g.amount) : ""})`).join("; ") || "none stated"}`,
     `Risk tolerance: ${p.risk}/10 (1 = capital preservation, 10 = growth seeking)`
   ].join("\n");
 }
@@ -1102,8 +1242,8 @@ function localInvest(p){
   if (p.stability === "variable") eq = Math.min(eq, 60);
   eq = Math.max(10, Math.min(85, eq));
   const dbt = Math.round((100-eq)*0.78), oth = 100-eq-dbt;
-  const goalLabel = (GOAL_VOCAB.find(v => v.months===longH)||{}).label || "the long-horizon goal";
-  const nearLabel = (GOAL_VOCAB.find(v => v.months===shortH)||{}).label || "the nearest goal";
+  const goalLabel = (p.goals.find(v => +v.months===longH)||{}).label || "the long-horizon goal";
+  const nearLabel = (p.goals.find(v => +v.months===shortH)||{}).label || "the nearest goal";
   return {
     agent:"investing", investing_pct:iv,
     category_split:{ equity_pct:eq, debt_instruments_pct:dbt, other_pct:oth },
@@ -1156,8 +1296,8 @@ function localCoordinate(p, prop){
   /* Horizon override: a goal inside two years is a cash goal, not an equity goal.
      No rule arbitrates by horizon, so this is declared in rule_gap rather than
      dressed up as a rule citation. */
-  const nearGoal = GOAL_VOCAB.find(v => v.months === shortH);
-  const nearIsCashGoal = !toxic.length && gap === 0 && shortH <= 24 && nearGoal && nearGoal.id !== "buffer";
+  const nearGoal = p.goals.find(v => +v.months === shortH);
+  const nearIsCashGoal = !toxic.length && gap === 0 && shortH <= 24 && nearGoal && nearGoal.id !== "buffer" && nearGoal.id !== "emergency";
   if (nearIsCashGoal){
     const shift = Math.min(20, invPct - 15);
     if (shift > 0){ invPct -= shift; efPct += shift; }
@@ -1206,8 +1346,8 @@ function localCoordinate(p, prop){
     detail:`Total ${fmt(ef+ed+iv)} against ${fmt(D)} of discretionary income. Contractual minimums of ${fmt(minTotal(p))} continue untouched alongside this.` });
 
   const lead = p.debts.slice().sort((a,b) => b.apr - a.apr)[0];
-  const goalNear = GOAL_VOCAB.find(v => v.months === shortH);
-  const goalLong = GOAL_VOCAB.find(v => v.months === longH);
+  const goalNear = p.goals.find(v => +v.months === shortH);
+  const goalLong = p.goals.find(v => +v.months === longH);
   const sim = simulatePayoff(p.debts, ed, prop.debt.method);
 
   const first = gap > 0
@@ -1218,7 +1358,7 @@ function localCoordinate(p, prop){
     ? `${fmt(ed)} of it goes at the ${lead.name}, which is costing you ${lead.apr}% a year whatever else happens. Your investment agent argued for more now, and on a ${Math.round(longH/12)}-year view it is not wrong — but ${lead.apr}% of certain cost removed outranks an uncertain return, so investing starts at ${fmt(iv)} and steps up the month that balance clears.`
     : `Your debts sit at ${p.debts.map(x => x.apr + "%").join(" and ")} — none of them in the range that outranks investing outright. They stay at their ${fmt(minTotal(p))} minimums, ${fmt(ed)} goes to steady extra payment, and ${fmt(iv)} starts working on ${goalLong ? goalLong.label.toLowerCase() : "the long-horizon goal"}.`;
 
-  const third = goalNear && goalNear.months <= 24 && goalNear.id !== "buffer"
+  const third = goalNear && +goalNear.months <= 24 && goalNear.id !== "buffer" && goalNear.id !== "emergency"
     ? `${goalNear.label} in ${goalNear.months} months is deliberately not invested — money you need that soon sits where it cannot fall. Revisit this the month either that goal is met or a balance clears, whichever comes first.`
     : `Revisit this the month ${lead ? "the " + lead.name.toLowerCase() + " clears" : "your first balance clears"} — projected around ${months(sim.months)} at this rate — and move the freed payment straight into investing rather than into spending.`;
 
@@ -1275,7 +1415,7 @@ async function run(){
   state.running = true;
   const btn = document.getElementById("btn-run");
   btn.disabled = true; btn.textContent = "In session…";
-  resetRun(); renderAgents(); renderRuling(); renderLedger(); renderRulesRef();
+  resetRun(); renderAgents(); renderRuling(); renderLedger(); renderRulesRef(); renderStepNav();
   say("Three specialists are preparing proposals.");
   document.getElementById("sec-debt").scrollIntoView({ behavior:"smooth", block:"start" });
 
@@ -1289,7 +1429,7 @@ async function run(){
   const failed = [b,d,i].filter(x => x.status === "error");
   if (failed.length){
     state.coordinator = { status:"error", error:"Cannot convene: " + failed.length + " specialist(s) failed to report." };
-    finishRun(); renderRuling(); say("A specialist failed. The coordinator did not run.");
+    finishRun(); renderRuling(); renderStepNav(); say("A specialist failed. The coordinator did not run.");
     return;
   }
 
@@ -1323,6 +1463,19 @@ async function run(){
   }
   finishRun();
   renderAgents(); renderRuling(); renderLedger(); renderRulesRef(); renderChart();
+  renderPlain(); renderStepper(); renderStepNav();
+  if (state.plan) gotoStep("ruling", false);
+}
+
+/* The toolbar shortcut still honours the queue: it will not run on a file
+   that has not cleared the earlier stages. */
+function convene(){
+  for (const s of ["file","goals"]){
+    const stop = stepBlocker(s);
+    if (stop){ gotoStep(s); toast(stop); return; }
+  }
+  if (state.step !== "review") gotoStep("review", false);
+  run();
 }
 
 function finishRun(){
@@ -1475,9 +1628,110 @@ function renderWorkspace(){
   document.getElementById("bar-name").textContent = state.profile.name;
   document.getElementById("bar-occ").textContent = state.profile.occupation;
   renderForm(); renderTally(); renderSorts(); renderChart();
-  renderAgents(); renderRuling(); renderLedger(); renderRulesRef(); renderMode();
+  renderAgents(); renderRuling(); renderLedger(); renderRulesRef(); renderPlain();
+  renderStepper(); renderStepNav();
   const btn = document.getElementById("btn-run");
   btn.disabled = false; btn.textContent = "Convene the board ▸";
+}
+
+/* =====================================================================
+   11a · THE QUEUE — one input stage at a time, in order
+   ===================================================================== */
+
+const STEPS = [
+  { id:"file",   n:"01", label:"Client file" },
+  { id:"goals",  n:"02", label:"Goals" },
+  { id:"review", n:"03", label:"Review" },
+  { id:"ruling", n:"04", label:"Ruling" }
+];
+const stepIndex = id => STEPS.findIndex(s => s.id === id);
+
+/* What blocks the user from moving on. Returns null when the stage is done. */
+function stepBlocker(id){
+  const p = state.profile;
+  if (id === "file"){
+    if (!(+p.income > 0)) return "Enter a net monthly income to continue.";
+    if (discretionary(p) <= 0)
+      return `Essentials and minimums (${fmt((+p.essentials||0) + minTotal(p))}) use up the whole income — there is no discretionary pool to allocate.`;
+    return null;
+  }
+  if (id === "goals"){
+    if (!p.goals.length) return "Add at least one goal — the investment agent needs a horizon to argue for.";
+    if (p.goals.some(g => !(+g.months > 0))) return "Every goal needs a horizon in months.";
+    return null;
+  }
+  if (id === "review") return state.plan ? null : "Convene the board to produce the ruling.";
+  return null;
+}
+
+function gotoStep(id, announce){
+  if (!STEPS.some(s => s.id === id)) return;
+  state.step = id;
+  state.maxStep = Math.max(state.maxStep, stepIndex(id));
+  STEPS.forEach(s => {
+    const el = document.getElementById("step-" + s.id);
+    if (el) el.classList.toggle("on", s.id === id);
+  });
+  renderStepper(); renderStepNav();
+  if (id === "review"){ renderChart(); renderSorts(); }
+  if (id === "goals") renderGoals();
+  if (id === "file") renderTally();
+  window.scrollTo({ top:0, behavior: matchMedia("(prefers-reduced-motion:reduce)").matches ? "auto" : "smooth" });
+  if (announce !== false) say(STEPS[stepIndex(id)].label + ", step " + (stepIndex(id)+1) + " of " + STEPS.length + ".");
+}
+
+function renderStepper(){
+  const cur = stepIndex(state.step);
+  document.getElementById("stepper").innerHTML = STEPS.map((s,i) => {
+    const cls = i === cur ? "now" : i < cur || i <= state.maxStep ? "done" : "";
+    /* A later stage is only reachable once everything before it is satisfied. */
+    const reachable = i <= cur || STEPS.slice(0, i).every(x => !stepBlocker(x.id));
+    return `<li class="${cls}"><button data-step="${s.id}" ${reachable?"":"disabled"}
+      ${i===cur?'aria-current="step"':""}>
+      <span class="k">${i < cur ? "✓" : s.n}</span><span class="t">${esc(s.label)}</span></button></li>`;
+  }).join("");
+  document.getElementById("stepper").querySelectorAll("[data-step]").forEach(b =>
+    b.addEventListener("click", () => gotoStep(b.dataset.step)));
+}
+
+function renderStepNav(){
+  const host = document.getElementById("stepnav");
+  const i = stepIndex(state.step);
+  const blocker = stepBlocker(state.step);
+  const back = i > 0
+    ? `<button class="btn btn-sm" data-nav="back">← ${esc(STEPS[i-1].label)}</button>`
+    : `<button class="btn btn-sm" data-nav="clients">← Clients</button>`;
+
+  let primary, msg = "";
+  if (state.step === "review"){
+    primary = `<button class="btn btn-sm btn-y" data-nav="run" ${state.running?"disabled":""}>${
+      state.running ? "Board in session…" : state.plan ? "Re-convene ▸" : "Convene the board ▸"}</button>` +
+      (state.plan ? `<button class="btn btn-sm" data-nav="next">See the ruling →</button>` : "");
+    msg = state.plan ? "" : "Three agents will table proposals, then the coordinator rules.";
+  } else if (state.step === "ruling"){
+    primary = `<button class="btn btn-sm" data-nav="copy">Copy plan</button>
+               <button class="btn btn-sm btn-y" data-nav="download">Download plan</button>`;
+  } else {
+    primary = `<button class="btn btn-sm btn-y" data-nav="next" ${blocker?"disabled":""}>${esc(STEPS[i+1].label)} →</button>`;
+    msg = blocker || "";
+  }
+
+  host.innerHTML = `<span class="hintmsg ${blocker && state.step!=="review" ? "warn":""}">${esc(msg)}</span>
+    <span class="grp">${back}${primary}</span>`;
+
+  host.querySelectorAll("[data-nav]").forEach(b => b.addEventListener("click", () => {
+    const a = b.dataset.nav;
+    if (a === "back") gotoStep(STEPS[i-1].id);
+    else if (a === "clients") showIntake();
+    else if (a === "next"){
+      const stop = stepBlocker(state.step);
+      if (stop && state.step !== "review"){ toast(stop); return; }
+      gotoStep(STEPS[Math.min(i+1, STEPS.length-1)].id);
+    }
+    else if (a === "run") run();
+    else if (a === "copy") copyPlan();
+    else if (a === "download") downloadPlan();
+  }));
 }
 
 /* ---------- form ---------- */
@@ -1512,17 +1766,94 @@ function renderForm(){
     renderForm(); renderTally(); renderChart();
   }));
 
-  const chips = document.getElementById("goal-chips");
-  chips.innerHTML = GOAL_VOCAB.map(g =>
-    `<button class="chip" data-goal="${g.id}" aria-pressed="${p.goals.includes(g.id)}">${esc(g.label)}<span class="h">${g.months}m</span></button>`).join("");
-  chips.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => {
-    const gs = state.profile.goals, at = gs.indexOf(c.dataset.goal);
-    if (at === -1) gs.push(c.dataset.goal); else gs.splice(at,1);
-    renderForm();
+  renderGoals();
+}
+
+/* ---------- goals: pick from the catalogue, then set your own horizon ---------- */
+function renderGoalPicker(){
+  const sel = document.getElementById("goal-pick");
+  if (!sel) return;
+  const taken = new Set(state.profile.goals.map(g => g.id));
+  sel.innerHTML = GOAL_GROUPS.map(grp => `<optgroup label="${esc(grp)}">` +
+      GOAL_VOCAB.filter(v => v.g === grp)
+        .map(v => `<option value="${v.id}"${taken.has(v.id)?" disabled":""}>${esc(v.label)}${taken.has(v.id)?" — added":""}</option>`).join("") +
+    `</optgroup>`).join("") +
+    `<optgroup label="Other"><option value="__custom">Custom goal…</option></optgroup>`;
+  syncGoalDefaults();
+}
+
+function syncGoalDefaults(){
+  const sel = document.getElementById("goal-pick");
+  if (!sel) return;
+  const isCustom = sel.value === "__custom";
+  document.getElementById("wrap-custom").style.display = isCustom ? "" : "none";
+  const v = GOAL_VOCAB.find(x => x.id === sel.value);
+  if (v) document.getElementById("goal-months").value = v.months;
+}
+
+function addGoal(){
+  const sel = document.getElementById("goal-pick");
+  const mo = Math.max(1, Math.min(600, +document.getElementById("goal-months").value || 0));
+  const amt = +document.getElementById("goal-amt").value || 0;
+  if (!mo){ toast("Give the goal a horizon in months."); return; }
+  let id = sel.value, label;
+  if (id === "__custom"){
+    label = (document.getElementById("goal-custom").value || "").trim();
+    if (!label){ toast("Name the custom goal first."); return; }
+    id = "custom-" + Date.now();
+  } else {
+    const v = GOAL_VOCAB.find(x => x.id === id);
+    if (!v){ toast("Pick a goal first."); return; }
+    if (state.profile.goals.some(g => g.id === id)){ toast(v.label + " is already on the list."); return; }
+    label = v.label;
+  }
+  state.profile.goals.push({ id, label, months:mo, amount:amt || undefined });
+  document.getElementById("goal-custom").value = "";
+  document.getElementById("goal-amt").value = "";
+  renderGoals(); renderStepNav();
+  say(label + " added, " + mo + " months out.");
+}
+
+function renderGoals(){
+  const host = document.getElementById("goal-list");
+  if (!host) return;
+  const p = state.profile;
+  const shortH = p.goals.length ? Math.min(...p.goals.map(g => +g.months || Infinity)) : 0;
+
+  host.innerHTML = p.goals.length ? p.goals.map((g,i) => `
+    <div class="goalrow ${+g.months === shortH ? "near" : ""}">
+      <span class="gl">${esc(g.label)}
+        <small>${+g.months === shortH ? "nearest horizon — drives the time-conflict test" : yearsOut(+g.months)}</small></span>
+      <span><span class="gcap">Months</span>
+        <input type="number" value="${+g.months}" min="1" max="600" step="1" data-gi="${i}" data-gf="months" aria-label="Months until ${esc(g.label)}"></span>
+      <span><span class="gcap">Target</span>
+        <input type="number" value="${g.amount || ""}" min="0" step="1000" placeholder="optional" data-gi="${i}" data-gf="amount" aria-label="Target amount for ${esc(g.label)}"></span>
+      <button class="xbtn" data-gdel="${i}" aria-label="Remove ${esc(g.label)}">×</button>
+    </div>`).join("")
+    : `<p class="ph">No goals yet. Add at least one — the investment agent has nothing to argue for without a horizon.</p>`;
+
+  host.querySelectorAll("input[data-gi]").forEach(inp => inp.addEventListener("input", () => {
+    const g = state.profile.goals[+inp.dataset.gi];
+    const f = inp.dataset.gf;
+    g[f] = f === "months" ? Math.max(1, Math.min(600, +inp.value || 1)) : (+inp.value || undefined);
+    if (f === "months") renderGoals();
   }));
+  host.querySelectorAll("[data-gdel]").forEach(b => b.addEventListener("click", () => {
+    const g = state.profile.goals.splice(+b.dataset.gdel, 1)[0];
+    renderGoals(); renderGoalPicker(); renderStepNav();
+    say((g ? g.label : "Goal") + " removed.");
+  }));
+  renderGoalPicker();
+}
+
+function yearsOut(m){
+  if (!m) return "";
+  if (m < 24) return m + " months out";
+  return (m/12).toFixed(m % 12 ? 1 : 0).replace(/\.0$/,"") + " years out";
 }
 
 function renderTally(){
+  renderStepNav();
   const p = state.profile, d = discretionary(p);
   document.getElementById("tally").innerHTML = `
     <div><span class="k">Net income</span><div class="v">${fmt(p.income)}</div></div>
@@ -1904,6 +2235,69 @@ function renderRuling(){
   });
 }
 
+/* ---------- the simplified ruling: everything that matters, in plain words ---------- */
+function renderPlain(){
+  const host = document.getElementById("plain");
+  if (!host) return;
+  const plan = state.plan, p = state.profile, g = state.guardrails;
+
+  if (!plan){
+    host.innerHTML = `<p class="ph">No ruling yet. Go back a step and convene the board.</p>`;
+    return;
+  }
+
+  const fa = plan.final_allocation, fp = plan.final_pct;
+  const lead = p.debts.slice().sort((a,b) => b.apr - a.apr)[0];
+  const near = p.goals.slice().sort((a,b) => (+a.months) - (+b.months))[0];
+  const gap = efGap(p);
+
+  const why = {
+    ef: gap > 0
+      ? `You are ${fmt(gap)} short of one month of essentials. Until that is closed, one bad month turns into new borrowing.`
+      : `The buffer already covers a month of essentials, so this is topping it toward ${fmt(p.efTarget)}${near ? ` and holding cash for ${near.label.toLowerCase()}` : ""}.`,
+    debt: lead && +lead.apr >= 15
+      ? `On top of the ${fmt(minTotal(p))} of minimums, aimed at the ${lead.name.toLowerCase()} first — ${lead.apr}% is a cost you avoid with certainty.`
+      : `On top of the ${fmt(minTotal(p))} of minimums. Nothing here is expensive enough to chase harder than that.`,
+    inv: near && +near.months <= 24
+      ? `Held down on purpose: ${near.label.toLowerCase()} lands in ${near.months} months, and money needed that soon cannot sit anywhere it can fall.`
+      : `Started now rather than later — the years of compounding you skip are the ones you cannot buy back.`
+  };
+
+  const rows = [
+    { k:"ef",   cls:"p-ef",   amt:fa.emergency_fund, pct:fp.emergency_fund_pct, t:"Into the emergency fund", w:why.ef },
+    { k:"debt", cls:"p-debt", amt:fa.extra_debt,     pct:fp.extra_debt_pct,     t:"Extra at the debt",       w:why.debt },
+    { k:"inv",  cls:"p-inv",  amt:fa.investing,      pct:fp.investing_pct,      t:"Invested",                w:why.inv }
+  ];
+
+  const ruleNames = (plan.rules_applied||[]).map(r => RULES[r.rule] ? RULES[r.rule].id : r.rule).join(", ");
+
+  host.innerHTML = `<div class="plain">
+    <div class="plain-hd">
+      <h2>${esc(p.name.split(" ")[0])}'s monthly plan</h2>
+      <p>Every month, out of ${fmt(g.D)} of discretionary income — after ${fmt(p.essentials)} of essentials and ${fmt(minTotal(p))} of minimum payments are already paid.</p>
+    </div>
+    <div class="plain-bd">
+      ${rows.map(r => `<div class="pline ${r.cls}">
+        <span class="pamt">${fmt(r.amt)}<small>${r.pct}% of the pool</small></span>
+        <span class="pw"><b>${esc(r.t)}</b><span>${esc(r.w)}</span></span>
+      </div>`).join("")}
+
+      <div class="pcall"><b>The call that had to be made.</b> ${esc(plan.conflict.summary)}
+        ${ruleNames ? ` Settled under ${esc(ruleNames)}.` : ""}
+        ${plan.rule_gap ? " No rule covered it cleanly, so the coordinator declared the gap rather than stretching a citation." : ""}</div>
+
+      ${state.projection ? `<div class="pnext"><b>What happens if you hold this.</b>
+        Every balance clears in about <b>${months(state.projection.months)}</b>, with roughly ${fmt(state.projection.interest)} of interest paid along the way.
+        ${lead ? `Revisit the month the ${esc(lead.name.toLowerCase())} clears and move that freed payment into investing rather than into spending.` : ""}</div>` : ""}
+
+      <div class="pok ${g.pass?"":"bad"}"><span class="m">${g.pass?"✓":"!"}</span>
+        <span>${g.pass
+          ? `Checked in code: the three amounts re-sum to ${fmt(g.sum)}, inside the ${fmt(g.D)} available.`
+          : `A code-side check failed — open the full working below.`}</span></div>
+    </div>
+  </div>`;
+}
+
 /* ---------- ledger ---------- */
 function ledgerVisible(){
   if (state.ledgerFilter === "conflict") return state.ledger.filter(e => e.type === "conflict" || e.type === "rule_gap");
@@ -1979,6 +2373,12 @@ function planText(){
   L.push("");
   L.push("DEBT SCHEDULE");
   p.debts.forEach(d => L.push(`  ${String(d.name).padEnd(24)} ${fmt(d.balance).padStart(12)}  ${String(d.apr).padStart(5)}%  min ${fmt(d.min)}`));
+  L.push("");
+  L.push("GOALS");
+  p.goals.forEach(g => L.push(
+    `  ${String(g.label).padEnd(28)} ${String(g.months + " months").padStart(11)}` +
+    (g.amount ? `   target ${fmt(g.amount)}` : "")));
+  L.push(`  Risk tolerance             ${p.risk}/10`);
   L.push("");
   L.push("THE CONFLICT");
   L.push("  " + plan.conflict.summary);
@@ -2094,8 +2494,14 @@ function boot(){
     renderForm(); renderTally(); renderChart();
   });
 
+  document.getElementById("goal-pick").addEventListener("change", syncGoalDefaults);
+  document.getElementById("btn-add-goal").addEventListener("click", addGoal);
+  document.getElementById("goal-custom").addEventListener("keydown", e => {
+    if (e.key === "Enter"){ e.preventDefault(); addGoal(); }
+  });
+
   document.getElementById("btn-back").addEventListener("click", showIntake);
-  document.getElementById("btn-run").addEventListener("click", run);
+  document.getElementById("btn-run").addEventListener("click", convene);
   document.getElementById("btn-copy").addEventListener("click", copyPlan);
   document.getElementById("btn-dl").addEventListener("click", downloadPlan);
   document.getElementById("btn-print").addEventListener("click", () => window.print());
