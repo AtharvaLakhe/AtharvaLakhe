@@ -359,8 +359,9 @@ tr.sel input{background:var(--yel);color:var(--on-yel)}
    from a single-hue sequential ramp and is stated as a direct label. The rule
    that applies is carried as TEXT, never by colour alone. */
 .chart{display:flex;flex-direction:column;gap:2px}
+#chart{--col-v:104px;--col-a:52px}
 .crow{
-  display:grid;grid-template-columns:minmax(112px,1.05fr) minmax(0,3fr) auto auto;
+  display:grid;grid-template-columns:minmax(112px,1.05fr) minmax(0,3fr) var(--col-v) var(--col-a);
   gap:13px;align-items:center;width:100%;text-align:left;cursor:pointer;
   padding:8px 10px;border:1.5px solid transparent;border-radius:8px;background:none;
   transition:background .13s,border-color .13s;
@@ -383,14 +384,17 @@ tr.sel input{background:var(--yel);color:var(--on-yel)}
   height:17px;border-radius:0 4px 4px 0;width:0;flex:none;min-width:3px;
   transition:width .62s cubic-bezier(.3,1,.4,1);
 }
-.cval{font-family:var(--mono);font-size:11.5px;font-weight:700;white-space:nowrap;color:var(--ink)}
-.capr{font-family:var(--mono);font-size:14px;font-weight:800;letter-spacing:-.04em;text-align:right;min-width:56px}
+.cval{font-family:var(--mono);font-size:11.5px;font-weight:700;white-space:nowrap;color:var(--ink);text-align:right}
+.capr{font-family:var(--mono);font-size:14px;font-weight:800;letter-spacing:-.04em;text-align:right}
 .caxis{
-  display:grid;grid-template-columns:minmax(112px,1.05fr) minmax(0,3fr) auto auto;gap:13px;
+  display:grid;grid-template-columns:minmax(112px,1.05fr) minmax(0,3fr) var(--col-v) var(--col-a);gap:13px;
   padding:7px 10px 0;margin-top:5px;border-top:1.5px solid var(--grid);
   font-family:var(--mono);font-size:9.5px;font-weight:600;color:var(--ink-2);
 }
-.caxis .ticks{display:flex;justify-content:space-between}
+.caxis .ticks{position:relative;height:12px}
+.caxis .ticks span{position:absolute;top:0;white-space:nowrap;transform:translateX(-50%)}
+.caxis .ticks span:first-child{transform:none}
+.caxis .ticks span:last-child{transform:translateX(-100%)}
 .clegend{display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-top:12px;font-size:11px;font-weight:600;color:var(--ink-2)}
 .ramp{display:flex;align-items:center;gap:8px}
 .ramp .sw{width:104px;height:9px;border-radius:3px;border:1.5px solid var(--grid);
@@ -1944,7 +1948,7 @@ function renderChart(){
     </button>`).join("") + `</div>
     <div class="caxis">
       <span>${esc(note)}</span>
-      <span class="ticks">${ticks.map(t => `<span>${t ? fmtShort(maxBal*t) : "0"}</span>`).join("")}</span>
+      <span class="ticks">${ticks.map(t => `<span style="left:${t*100}%">${t ? fmtShort(maxBal*t) : "0"}</span>`).join("")}</span>
       <span>balance</span><span style="text-align:right">APR</span>
     </div>`;
 
