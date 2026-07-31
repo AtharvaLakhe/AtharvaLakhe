@@ -5,8 +5,7 @@
 ================================================================================
   Full architecture note lives in README.md. Short version:
 
-  Four agents, four separate calls to claude-sonnet-4-6, each with its own
-  system prompt and a strict JSON contract.
+  Four deterministic agents, each with its own mandate and strict JSON contract.
 
     1 BUDGETING     splits discretionary income three ways. Nothing else.
     2 DEBT STRATEGY biased toward aggressive payoff, by design.
@@ -32,10 +31,8 @@
   Colour also does data work: an account's APR band sets its bubble colour,
   so R2 and R3 are legible before a single agent has spoken.
 
-  Runs standalone. Open index.html anywhere api.anthropic.com is reachable for
-  live streamed model calls; elsewhere it falls back to a local deterministic
-  rule engine and says so plainly in a banner. It never presents simulated text
-  as model output.
+  Runs standalone. Open index.html and the local deterministic rule engine
+  computes the complete negotiation in-browser.
 ================================================================================
 -->
 <meta charset="utf-8">
@@ -625,7 +622,7 @@ details.about code{font-family:var(--mono);font-size:10.5px;background:var(--yel
 
     <div class="intake-foot">
       <span>Every figure is editable once a file is open. Nothing is stored — the session lives in memory.</span>
-      <button class="btn btn-sm" id="intake-mode">checking model access…</button>
+      <button class="btn btn-sm" id="intake-mode" disabled>local engine</button>
     </div>
   </div>
 </section>
@@ -635,7 +632,7 @@ details.about code{font-family:var(--mono);font-size:10.5px;background:var(--yel
   <div class="bar">
     <button class="btn btn-sm" id="btn-back">← Clients</button>
     <span class="who"><b id="bar-name">—</b><span id="bar-occ">—</span></span>
-    <button class="mode" id="mode-pill" title="Choose where the agents run"><span class="led"></span><span id="mode-txt">…</span></button>
+    <button class="mode local" id="mode-pill" disabled title="Agents run locally"><span class="led"></span><span id="mode-txt">local engine</span></button>
     <button class="btn btn-sm" id="btn-theme-2">◐</button>
     <button class="btn btn-sm" id="btn-print">Print</button>
     <button class="btn btn-sm" id="btn-copy">Copy</button>
@@ -644,7 +641,6 @@ details.about code{font-family:var(--mono);font-size:10.5px;background:var(--yel
   </div>
 
   <div class="wrap">
-    <div id="mode-banner"></div>
 
     <!-- 1 · client file -->
     <section>
@@ -707,7 +703,7 @@ details.about code{font-family:var(--mono);font-size:10.5px;background:var(--yel
     <!-- 3 · proposals -->
     <section>
       <div class="sec-hd"><span class="n">03</span><h2>The proposals</h2>
-        <span class="sub">Three agents, three separate model calls, three competing claims on the same money.</span></div>
+        <span class="sub">Three agents, three competing claims on the same money.</span></div>
       <div class="agents" id="agents"></div>
     </section>
 
@@ -752,36 +748,12 @@ details.about code{font-family:var(--mono);font-size:10.5px;background:var(--yel
 
 <div class="toast" id="toast" role="status"></div>
 
-<dialog class="dlg" id="keydlg" aria-labelledby="keydlg-h">
-  <div class="dlg-in">
-    <h2 id="keydlg-h">Model access</h2>
-    <div class="modes" id="dlg-modes"></div>
-    <div class="field">
-      <label for="apikey">Anthropic API key</label>
-      <input type="password" id="apikey" placeholder="sk-ant-…" autocomplete="off" spellcheck="false">
-    </div>
-    <p>The key is held in memory for this tab only — never written to disk, never sent
-    anywhere except <b>api.anthropic.com</b>. Close the tab and it is gone. Browsers send
-    an <b>Origin</b> header the API rejects from <code>file://</code>, so for live mode serve
-    the folder (<b>npx serve</b>) rather than double-clicking the file.</p>
-    <div class="dlg-actions">
-      <button class="btn btn-sm" id="btn-key-cancel">Cancel</button>
-      <button class="btn btn-sm" id="btn-key-clear">Use local engine</button>
-      <button class="btn btn-sm btn-y" id="btn-key-save">Connect</button>
-    </div>
-  </div>
-</dialog>
-
 <script>
 "use strict";
 
 /* =====================================================================
    1 · CONSTANTS
    ===================================================================== */
-
-const MODEL = "claude-sonnet-4-6";
-const MAX_TOKENS = 1000;
-const API = "https://api.anthropic.com/v1/messages";
 
 const RULES = {
   rule_1: { id:"R1", name:"Starter buffer",
@@ -870,7 +842,7 @@ const state = {
   plan:null, guardrails:null, projection:null,
   ledger:[], expanded:new Set(), ledgerFilter:"all",
   sort:"apr", view:"chart", selectedDebt:null,
-  mode:"unknown", reason:"blocked", apiKey:null, running:false
+  mode:"local", running:false
 };
 
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
@@ -1094,121 +1066,8 @@ function parseJSONLoose(text){
   return JSON.parse(t.slice(a,b+1));
 }
 
-/* A key is only needed when running standalone. Inside a host that already
-   authenticates the call, the header is simply absent and the host supplies it. */
-function apiHeaders(){
-  const h = {
-    "content-type":"application/json",
-    "anthropic-version":"2023-06-01",
-    "anthropic-dangerous-direct-browser-access":"true"
-  };
-  if (state.apiKey) h["x-api-key"] = state.apiKey;
-  return h;
-}
-
-async function callModel(system, user, onDelta){
-  const res = await fetch(API, {
-    method:"POST",
-    headers: apiHeaders(),
-    body: JSON.stringify({ model:MODEL, max_tokens:MAX_TOKENS, stream:true,
-                           system, messages:[{ role:"user", content:user }] })
-  });
-  if (!res.ok){
-    let detail = ""; try { detail = (await res.text()).slice(0,300); } catch(e){}
-    throw new Error("API " + res.status + (detail ? " — " + detail : ""));
-  }
-  if (!res.body){
-    const j = await res.json();
-    const txt = (j.content||[]).map(c => c.text||"").join("");
-    onDelta && onDelta(txt, txt);
-    return txt;
-  }
-  const reader = res.body.getReader(), dec = new TextDecoder();
-  let buf = "", out = "";
-  while (true){
-    const { value, done } = await reader.read();
-    if (done) break;
-    buf += dec.decode(value, { stream:true });
-    const lines = buf.split("\n"); buf = lines.pop();
-    for (const line of lines){
-      if (!line.startsWith("data:")) continue;
-      const payload = line.slice(5).trim();
-      if (!payload || payload === "[DONE]") continue;
-      let ev; try { ev = JSON.parse(payload); } catch(e){ continue; }
-      if (ev.type === "content_block_delta" && ev.delta && typeof ev.delta.text === "string"){
-        out += ev.delta.text; onDelta && onDelta(ev.delta.text, out);
-      } else if (ev.type === "error"){
-        throw new Error((ev.error && ev.error.message) || "stream error");
-      }
-    }
-  }
-  return out;
-}
-
-/* Decide honestly which of the two engines is actually available.
-   reason: "ready" | "auth" | "blocked" | "error" — drives what the UI offers. */
-async function probeAPI(){
-  state.mode = "local"; state.reason = "blocked";
-  try{
-    const c = new AbortController();
-    const t = setTimeout(() => c.abort(), 7000);
-    const res = await fetch(API, {
-      method:"POST", signal:c.signal, headers:apiHeaders(),
-      body: JSON.stringify({ model:MODEL, max_tokens:1, messages:[{ role:"user", content:"hi" }] })
-    });
-    clearTimeout(t);
-    if (res.status === 401 || res.status === 403){ state.mode = "local"; state.reason = "auth"; }
-    else if (res.status < 500){ state.mode = "api"; state.reason = "ready"; }
-    else { state.mode = "local"; state.reason = "error"; }
-  }catch(e){
-    state.mode = "local";
-    state.reason = state.apiKey ? "error" : "blocked";
-  }
-  renderMode();
-}
-
-/* ---- model-access dialog ---- */
-function openKeyDialog(){
-  const dlg = document.getElementById("keydlg");
-  const live = state.mode === "api";
-  document.getElementById("dlg-modes").innerHTML = `
-    <div class="mrow ${!live?"on":""}"><span class="tick">${!live?"●":"○"}</span>
-      <span><b>Local rule engine${!live?" — active":""}</b>
-      Runs with no key and no network. Every figure is computed from the client file by
-      this page's own code — deterministic, and never labelled as model output.</span></div>
-    <div class="mrow ${live?"on":""}"><span class="tick">${live?"●":"○"}</span>
-      <span><b>Live agents${live?" — active":""}</b>
-      Four streamed calls to <b>${MODEL}</b>. Needs an API key below${
-        state.reason === "blocked" ? ", and a page served over http rather than file://" : ""}.</span></div>`;
-  document.getElementById("apikey").value = state.apiKey || "";
-  if (typeof dlg.showModal === "function") dlg.showModal(); else dlg.setAttribute("open","");
-}
-function closeKeyDialog(){
-  const dlg = document.getElementById("keydlg");
-  if (typeof dlg.close === "function") dlg.close(); else dlg.removeAttribute("open");
-}
-async function connectKey(){
-  const v = document.getElementById("apikey").value.trim();
-  if (!v){ toast("Paste a key, or choose the local engine."); return; }
-  state.apiKey = v;
-  closeKeyDialog();
-  state.mode = "unknown"; renderMode();
-  say("Checking model access.");
-  await probeAPI();
-  if (state.mode === "api") toast("Connected — agents will call " + MODEL + ".");
-  else if (state.reason === "auth") toast("That key was rejected. Still on the local engine.");
-  else toast("Could not reach the API. Still on the local engine.");
-}
-function clearKey(){
-  state.apiKey = null;
-  state.mode = "local"; state.reason = "blocked";
-  closeKeyDialog(); renderMode();
-  toast("Running on the local engine.");
-}
-
 /* =====================================================================
-   7 · LOCAL RULE ENGINE — used only when the API is unreachable, and the
-   page says so. Every figure is still derived from the live client file.
+   7 · LOCAL RULE ENGINE
    ===================================================================== */
 
 function localBudget(p){
@@ -1419,8 +1278,7 @@ async function runAgent(key, sys, user, localFn){
   renderAgents();
   const onDelta = (_c, full) => { state.agent[key].raw = full; paintStream(key, full); };
   try{
-    const raw = state.mode === "api" ? await callModel(sys, user, onDelta)
-                                     : await fakeStream(localFn(state.profile), onDelta);
+    const raw = await fakeStream(localFn(state.profile), onDelta);
     state.agent[key] = { status:"done", raw, data:parseJSONLoose(raw), error:null };
   }catch(err){
     state.agent[key] = { status:"error", raw:state.agent[key].raw, data:null, error:String(err.message||err) };
@@ -1469,9 +1327,7 @@ async function run(){
 
   try{
     const onDelta = (_c, full) => { state.coordinator.raw = full; };
-    const raw = state.mode === "api"
-      ? await callModel(SYS.coordinator, userMsg("coordinator", p, proposals), onDelta)
-      : await fakeStream(localCoordinate(p, proposals), onDelta);
+    const raw = await fakeStream(localCoordinate(p, proposals), onDelta);
     const plan = parseJSONLoose(raw);
     normalisePlan(plan, p);
     state.plan = plan;
@@ -2120,37 +1976,6 @@ function renderRulesRef(){
   }).join("");
 }
 
-/* ---------- mode ---------- */
-function renderMode(){
-  const pill = document.getElementById("mode-pill");
-  const txt = document.getElementById("mode-txt");
-  const banner = document.getElementById("mode-banner");
-  const intakeM = document.getElementById("intake-mode");
-  if (state.mode === "api"){
-    pill.className = "mode live"; txt.textContent = "live agents";
-    intakeM.textContent = "● Live agents — " + MODEL;
-    if (banner) banner.innerHTML = "";
-  } else if (state.mode === "local"){
-    pill.className = "mode local"; txt.textContent = "local engine";
-    intakeM.textContent = "● Local engine — click to connect a model";
-    const why = state.reason === "auth"
-      ? "The API key supplied was rejected."
-      : state.reason === "error"
-        ? "The API answered with an error."
-        : "No API key is set for this page.";
-    if (banner) banner.innerHTML = `<div class="banner no-print">
-      <span>◆</span><span><b>Running on the local rule engine — no model calls are being made.</b>
-      ${why} The four agents are being played by this page's own deterministic code: every figure below is still
-      computed from the live client file, but the wording is not written by ${MODEL}, and it is never presented as
-      though it were. <button class="btn btn-sm" id="btn-connect" style="margin-top:8px">Connect a model →</button></span></div>`;
-    const cb = document.getElementById("btn-connect");
-    if (cb) cb.addEventListener("click", openKeyDialog);
-  } else {
-    pill.className = "mode"; txt.textContent = "checking…";
-    intakeM.textContent = "checking model access…";
-  }
-}
-
 /* =====================================================================
    12 · EXPORT
    ===================================================================== */
@@ -2163,7 +1988,7 @@ function planText(){
   L.push(rule());
   L.push(`Client        ${p.name}, ${p.age} — ${p.occupation}`);
   L.push(`Prepared      ${new Date().toLocaleDateString()}`);
-  L.push(`Source        ${state.mode === "api" ? MODEL + " (live)" : "local rule engine (API unreachable — not model output)"}`);
+  L.push("Source        local rule engine");
   L.push("");
   L.push("MONTHLY POSITION");
   L.push(`  Net income                  ${fmt(p.income)}`);
@@ -2221,12 +2046,6 @@ async function downloadPlan(){
   if (!state.plan){ toast("Convene the board first."); return; }
   const text = planText();
   const filename = "financial-plan-" + String(state.profile.name).toLowerCase().replace(/[^a-z0-9]+/g,"-") + ".txt";
-  try{
-    if (window.claude && window.claude.downloads && window.claude.downloads.save){
-      await window.claude.downloads.save({ filename, data:text });
-      toast("Plan saved."); return;
-    }
-  }catch(e){ /* declined or unavailable */ }
   try{
     const url = URL.createObjectURL(new Blob([text], { type:"text/plain;charset=utf-8" }));
     const a = document.createElement("a");
@@ -2302,15 +2121,6 @@ function boot(){
   document.getElementById("btn-theme-1").addEventListener("click", toggleTheme);
   document.getElementById("btn-theme-2").addEventListener("click", toggleTheme);
 
-  document.getElementById("mode-pill").addEventListener("click", openKeyDialog);
-  document.getElementById("intake-mode").addEventListener("click", openKeyDialog);
-  document.getElementById("btn-key-save").addEventListener("click", connectKey);
-  document.getElementById("btn-key-clear").addEventListener("click", clearKey);
-  document.getElementById("btn-key-cancel").addEventListener("click", closeKeyDialog);
-  document.getElementById("apikey").addEventListener("keydown", e => {
-    if (e.key === "Enter"){ e.preventDefault(); connectKey(); }
-  });
-
   document.querySelectorAll(".filt").forEach(b => b.addEventListener("click", () => {
     state.ledgerFilter = b.dataset.f;
     document.querySelectorAll(".filt").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.f === b.dataset.f)));
@@ -2324,22 +2134,19 @@ function boot(){
   });
 
   document.getElementById("about-bd").innerHTML = `
-    <p><b>Four agents, four separate model calls.</b> The budgeting agent sizes the split; the debt agent is written
+    <p><b>Four deterministic agents.</b> The budgeting agent sizes the split; the debt agent is written
     to argue for aggressive payoff; the investment agent is written to argue for starting now. Those two biases are
     deliberate — they are what makes the conflict real instead of staged. The coordinator is the only one that sees
     all three proposals, and it is forbidden from averaging them.</p>
-    <p><b>Enforced in the prompt</b> (the model is asked, and could fail): no named products or tickers, no guaranteed
+    <p><b>Enforced in the agent contracts</b>: no named products or tickers, no guaranteed
     returns, no legal/tax/settlement advice, no figure that is not in the client file.</p>
-    <p><b>Enforced in code</b> (the model cannot fail these — they run after the response lands and produce the
+    <p><b>Enforced in code</b>: these checks run after the response lands and produce the
     pass/fail panel): <code>G1</code> allocation re-summed in JS against discretionary income; <code>G2</code>
     percentages total 100; <code>G3</code> no negative component, minimums stay reserved; <code>G4</code> output
     regex-scanned for tickers, named institutions and guarantee language; <code>G5</code> the payoff timeline is a
-    local amortisation simulation, not the model's claim; <code>G6</code> JSON parsed defensively — fences stripped,
+    local amortisation simulation; <code>G6</code> JSON parsed defensively — fences stripped,
     then first <code>{</code> to last <code>}</code>.</p>
-    <p><b>Model:</b> <code>${MODEL}</code>, <code>max_tokens ${MAX_TOKENS}</code>, streamed. No storage APIs — the
-    session lives in memory only.</p>`;
-
-  probeAPI();
+    <p><b>Runtime:</b> local deterministic rule engine. No storage APIs — the session lives in memory only.</p>`;
 }
 
 boot();

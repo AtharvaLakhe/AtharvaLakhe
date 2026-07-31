@@ -1,8 +1,15 @@
 # Advisory Board
 
+[![Static HTML](https://img.shields.io/badge/static-HTML%20%2B%20CSS%20%2B%20JS-blue)](#)
+[![No Build](https://img.shields.io/badge/build-none-green)](#)
+[![No API](https://img.shields.io/badge/API-none-lightgrey)](#)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
+
 **A multi-agent financial advisory simulator where four agents argue over one household budget — and you can audit exactly how the disagreement was settled.**
 
 Single HTML file. No build step, no dependencies, no framework. Open it and it runs.
+
+**Live demo:** `https://atharva-lakhe.github.io/AtharvaLakhe/`
 
 > Built for the Cognition problem statement *"Multi-Agent Financial Advisory Simulator"*.
 
@@ -14,9 +21,20 @@ Personal financial planning means balancing goals that genuinely compete — deb
 
 The fix isn't a smarter single prompt. It's separating the concerns into specialists that each argue their own corner, and forcing a coordinator to reconcile them **against visible rules** instead of averaging them into mush.
 
+## Why multi-agent?
+
+The point is not having four boxes on screen. The point is that the agents are intentionally constrained:
+
+- the budgeting agent can size the pool, but cannot pick debt strategy or investments
+- the debt agent is biased toward certainty: interest avoided is concrete
+- the investment agent is biased toward time: delayed compounding has a cost
+- the coordinator has to resolve the conflict by citing rules and showing arithmetic
+
+That structure makes disagreement inspectable. A single all-purpose answer can hide tradeoffs; this interface makes the tradeoff the object being audited.
+
 ## What it actually does
 
-Four agents. Four separate calls to `claude-sonnet-4-6`, each with its own system prompt and a strict JSON contract.
+Four deterministic agents, each with its own mandate and a strict JSON contract.
 
 | # | Agent | Mandate | Cannot |
 |---|-------|---------|--------|
@@ -44,13 +62,13 @@ If none of the four cleanly covers the real conflict, the coordinator is instruc
 
 This distinction is the honest part of the submission, so it's surfaced in the UI rather than buried.
 
-**Enforced in the prompt** — the model is *asked*, and could fail:
+**Enforced in the agent contracts**:
 - No named stocks, funds, schemes, insurers, brokers or tickers — category level only
 - No guaranteed or projected returns
 - No legal, tax-filing, or debt-settlement advice (routed to an out-of-scope field)
 - No figure that isn't in the client file
 
-**Enforced in code** — the model *cannot* fail these. They run in JavaScript after the response lands and render as a pass/fail panel the model has no ability to influence:
+**Enforced in code** — these run in JavaScript after the response lands and render as a pass/fail panel:
 
 | ID | Check |
 |----|-------|
@@ -58,7 +76,7 @@ This distinction is the honest part of the submission, so it's surfaced in the U
 | `G2` | Final percentages total 100 (±1pp rounding) |
 | `G3` | No negative component; contractual minimums stay reserved |
 | `G4` | Output regex-scanned for ticker-shaped tokens, named institutions, guarantee language |
-| `G5` | Payoff timeline is a **local amortisation simulation**, not the model's claim |
+| `G5` | Payoff timeline is a **local amortisation simulation** |
 | `G6` | JSON parsed defensively — fences stripped, then first `{` to last `}` |
 
 `G4` earns its keep: during development it caught the *local engine's own* narrative using the phrase "a guaranteed 41% saved". The check failed the build's flagship persona and the copy was rewritten.
@@ -74,24 +92,45 @@ This distinction is the honest part of the submission, so it's surfaced in the U
 ```bash
 git clone https://github.com/Atharva-Lakhe/AtharvaLakhe.git
 cd AtharvaLakhe
-open index.html                 # works immediately, on the local engine
+open index.html                 # works immediately
 ```
 
-### The two engines
+### The engine
 
-The page probes for model access on load and tells you, in the top bar, which one it is running.
+Every agent is played by deterministic code in `index.html`. All four personas produce persona-specific figures computed from the live client file. Nothing is stubbed, no network is touched, and no API key is needed.
 
-**Local rule engine — the default, zero setup.** Every agent is played by deterministic code in this file. All four personas produce real, persona-specific figures computed from the live client file. Nothing is stubbed and no network is touched. This is what you get by opening the file directly, and it is enough to exercise the whole negotiation, every rule, and every guardrail.
+### Project structure
 
-**Live agents — optional.** Click the mode pill in the top bar, paste an Anthropic API key, and the same four roles become four real streamed calls to `claude-sonnet-4-6`, token-by-token into each agent card.
-
-```bash
-npx serve .                     # then open the printed http:// address
+```text
+.
+├── index.html      # Main app file
+├── examples/       # Sample exported output
+├── README.md       # Project documentation
+├── LICENSE         # License
+└── .gitignore      # Local/editor files ignored by Git
 ```
 
-Use a served address rather than `file://` for live mode — browsers send `Origin: null` from the filesystem and the API rejects it. The key is held in a JS variable for that tab only: never written to disk, never sent anywhere but `api.anthropic.com`. There is no `localStorage` or `sessionStorage` anywhere in the file; close the tab and the session is gone.
+### Environment
 
-**The two are never confused.** When the local engine is running, a banner says so in plain words and names what is producing the text. Simulated output is never presented as model output — a demo that silently fakes its agents isn't a demo of anything.
+No environment variables are required. There is no `.env` file, package install, build command, or API key setup.
+
+### GitHub Pages
+
+This repo can be published directly with GitHub Pages:
+
+1. Open the repository on GitHub.
+2. Go to **Settings → Pages**.
+3. Set **Source** to **Deploy from a branch**.
+4. Select the `main` branch and `/ (root)`.
+5. Save.
+
+GitHub Pages will serve `index.html` as the app entry point.
+
+---
+
+## Sample output
+
+See [examples/sample-plan.md](examples/sample-plan.md) for a representative exported plan from Case 01.
 
 ---
 
@@ -134,10 +173,21 @@ Results: allocations sum exactly to discretionary income in all four cases, perc
 
 ---
 
+## Limitations
+
+- Educational simulator only; it is not financial, legal, tax, or debt-settlement advice.
+- The agents are deterministic JavaScript roles, not licensed advisors and not live model calls.
+- The rule set is deliberately small so the arbitration stays inspectable.
+- Recommendations stay at category level and avoid named products, tickers, platforms, funds, insurers, or brokers.
+- The payoff projection is a simplified local amortisation model and does not include fees, penalties, taxes, rate changes, or behavioural risk.
+
+---
+
 ## Repository
 
 ```
 index.html    the entire application — markup, styles, agents, engine
+examples/     sample exported plan
 README.md     this file
 LICENSE       MIT
 ```
