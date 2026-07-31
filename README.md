@@ -69,20 +69,29 @@ This distinction is the honest part of the submission, so it's surfaced in the U
 
 ## Running it
 
+**It is self-contained and needs no host.** One file, no build, no dependencies, no server, no account. Double-click it.
+
 ```bash
 git clone https://github.com/Atharva-Lakhe/AtharvaLakhe.git
 cd AtharvaLakhe
-open index.html          # or just double-click it
+open index.html                 # works immediately, on the local engine
 ```
 
-**Model access.** The page calls `https://api.anthropic.com/v1/messages` directly from the browser with `stream: true`, and probes reachability on load.
+### The two engines
 
-- **API reachable** → four real streamed calls, token-by-token into each agent card. The pill in the top bar reads `live model`.
-- **API blocked** (offline, CSP, no key in the environment) → the four agents fall back to a **local deterministic rule engine**, and a banner says so in plain language. Every figure is still computed from the live client file, but the wording comes from the page's own code.
+The page probes for model access on load and tells you, in the top bar, which one it is running.
 
-It never presents simulated text as model output. That distinction is load-bearing — a demo that silently fakes its agents isn't a demo of anything.
+**Local rule engine — the default, zero setup.** Every agent is played by deterministic code in this file. All four personas produce real, persona-specific figures computed from the live client file. Nothing is stubbed and no network is touched. This is what you get by opening the file directly, and it is enough to exercise the whole negotiation, every rule, and every guardrail.
 
-No `localStorage` or `sessionStorage`; the session lives in memory only.
+**Live agents — optional.** Click the mode pill in the top bar, paste an Anthropic API key, and the same four roles become four real streamed calls to `claude-sonnet-4-6`, token-by-token into each agent card.
+
+```bash
+npx serve .                     # then open the printed http:// address
+```
+
+Use a served address rather than `file://` for live mode — browsers send `Origin: null` from the filesystem and the API rejects it. The key is held in a JS variable for that tab only: never written to disk, never sent anywhere but `api.anthropic.com`. There is no `localStorage` or `sessionStorage` anywhere in the file; close the tab and the session is gone.
+
+**The two are never confused.** When the local engine is running, a banner says so in plain words and names what is producing the text. Simulated output is never presented as model output — a demo that silently fakes its agents isn't a demo of anything.
 
 ---
 

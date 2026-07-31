@@ -82,6 +82,21 @@
   --ok-w:#dfeee4;
   --bad-w:#f7e3df;
 
+  /* Component tokens. Every dark variant is declared HERE, in the token blocks,
+     so no component needs its own `[data-theme="dark"] .thing` override — those
+     silently miss `prefers-color-scheme: dark` when the user never touches the
+     toggle, which is how a light square ended up on a dark page. */
+  --on-char:#eef1ec;
+  --intake-bg:var(--yel-soft);
+  --logo-bg:var(--ink); --logo-fg:var(--yel);
+  --pill-bg:var(--paper); --pill-fg:var(--ink); --pill-bd:var(--bd);
+  --marq-bd:var(--bd);
+  --bar-bg:var(--char);
+  --ruling-bg:var(--char);
+  --sortb-on-bg:var(--char); --sortb-on-fg:#eef1ec;
+  --coord-rail:var(--char);
+  --sel-bg:#c9d8f0; --sel-fg:#141917;
+
   --sans:"Archivo","Helvetica Neue",Helvetica,-apple-system,system-ui,"Segoe UI",Roboto,Arial,sans-serif;
   --mono:ui-monospace,"Cascadia Mono","SF Mono","Roboto Mono",Consolas,monospace;
 
@@ -101,6 +116,13 @@
     --ink:#e4e8e3; --ink-2:#99a49d; --bd:#47504a; --sh:#141917; --sh-hard:#0d110f;
     --grid:#2d3531;
     --ok:#4cc98a; --bad:#e07a68; --ok-w:#12291d; --bad-w:#301c18;
+    --intake-bg:var(--ground);
+    --logo-bg:var(--yel); --logo-fg:var(--on-yel);
+    --pill-bg:transparent; --pill-fg:var(--yel); --pill-bd:var(--yel);
+    --marq-bd:var(--yel); --bar-bg:#0f1512; --ruling-bg:#0f1512;
+    --sortb-on-bg:var(--yel); --sortb-on-fg:var(--on-yel);
+    --coord-rail:var(--sage);
+    --sel-bg:#3c4f6b; --sel-fg:#eef1ec;
   }
 }
 :root[data-theme="dark"]{
@@ -112,6 +134,13 @@
   --ink:#e4e8e3; --ink-2:#99a49d; --bd:#47504a; --sh:#141917; --sh-hard:#0d110f;
   --grid:#2d3531;
   --ok:#4cc98a; --bad:#e07a68; --ok-w:#12291d; --bad-w:#301c18;
+  --intake-bg:var(--ground);
+  --logo-bg:var(--yel); --logo-fg:var(--on-yel);
+  --pill-bg:transparent; --pill-fg:var(--yel); --pill-bd:var(--yel);
+  --marq-bd:var(--yel); --bar-bg:#0f1512; --ruling-bg:#0f1512;
+  --sortb-on-bg:var(--yel); --sortb-on-fg:var(--on-yel);
+  --coord-rail:var(--sage);
+  --sel-bg:#3c4f6b; --sel-fg:#eef1ec;
 }
 :root[data-theme="light"]{
   --yel:#e4d3a2; --yel-soft:#f2ead3; --on-yel:#1f2421; --char:#232a26; --sage:#aebbb4; --coral:#c4553a;
@@ -122,6 +151,13 @@
   --ink:#1f2421; --ink-2:#5a625c; --bd:#2a302c; --sh:#cfc9b9; --sh-hard:#2a302c;
   --grid:#e4dfd2;
   --ok:#0f7a45; --bad:#b3402c; --ok-w:#dfeee4; --bad-w:#f7e3df;
+  --intake-bg:var(--yel-soft);
+  --logo-bg:var(--ink); --logo-fg:var(--yel);
+  --pill-bg:var(--paper); --pill-fg:var(--ink); --pill-bd:var(--bd);
+  --marq-bd:var(--bd); --bar-bg:var(--char); --ruling-bg:var(--char);
+  --sortb-on-bg:var(--char); --sortb-on-fg:#eef1ec;
+  --coord-rail:var(--char);
+  --sel-bg:#c9d8f0; --sel-fg:#141917;
 }
 
 *{box-sizing:border-box}
@@ -130,6 +166,7 @@ body{
   font-family:var(--sans); font-size:14px; line-height:1.45;
   -webkit-font-smoothing:antialiased;
 }
+::selection{background:var(--sel-bg); color:var(--sel-fg)}
 h1,h2,h3{margin:0; font-weight:800; letter-spacing:-.035em; text-wrap:balance; line-height:1.05}
 p{margin:0}
 button{font:inherit;color:inherit;font-family:var(--sans)}
@@ -146,6 +183,7 @@ button{font:inherit;color:inherit;font-family:var(--sans)}
 .press:active{transform:translate(4px,4px); box-shadow:0 0 0 0 var(--sh)}
 
 .btn{
+  color:var(--ink);
   display:inline-flex;align-items:center;gap:7px;cursor:pointer;
   padding:8px 14px;border:2px solid var(--bd);border-radius:var(--r-s);
   background:var(--paper);box-shadow:3px 3px 0 0 var(--sh);
@@ -155,18 +193,16 @@ button{font:inherit;color:inherit;font-family:var(--sans)}
 .btn:hover{transform:translate(3px,3px);box-shadow:0 0 0 0 var(--sh)}
 .btn[disabled]{opacity:.5;cursor:not-allowed;transform:none;box-shadow:3px 3px 0 0 var(--sh)}
 .btn-y{background:var(--yel);color:var(--on-yel)}
-.btn-k{background:var(--char);color:#eef1ec;border-color:var(--bd)}
-:root[data-theme="dark"] .btn-k{color:#eef1ec}
+.btn-k{background:var(--char);color:var(--on-char);border-color:var(--bd)}
 .btn-sm{padding:5px 10px;font-size:11.5px;box-shadow:2px 2px 0 0 var(--sh)}
 
 .dots{background-image:radial-gradient(currentColor 1.4px, transparent 1.4px); background-size:22px 22px}
 
 /* ============================================================== INTAKE */
 .intake{
-  min-height:100vh; background:var(--yel-soft); color:var(--ink);
+  min-height:100vh; background:var(--intake-bg); color:var(--ink);
   display:flex; flex-direction:column;
 }
-:root[data-theme="dark"] .intake, .intake.dk{background:var(--ground); color:var(--ink)}
 .intake-in{
   width:100%; max-width:1120px; margin:0 auto; padding:40px 24px 60px;
   display:flex; flex-direction:column; gap:34px; flex:1;
@@ -174,20 +210,41 @@ button{font:inherit;color:inherit;font-family:var(--sans)}
 .intake-top{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap}
 .logo{
   width:40px;height:40px;flex:none;display:grid;place-items:center;
-  background:var(--ink);color:var(--yel);border-radius:8px;font-size:20px;font-weight:800;
+  background:var(--logo-bg);color:var(--logo-fg);border-radius:8px;font-size:20px;font-weight:800;
 }
-:root[data-theme="dark"] .logo{background:var(--yel);color:var(--on-yel)}
 .intake h1{font-size:clamp(38px,7vw,74px)}
-.intake h1 .hollow{
-  -webkit-text-stroke:2px currentColor; color:transparent;
+/* Outlined word. Falls back to a solid accent where text-stroke is missing,
+   so the word is never invisible. */
+.intake h1 .hollow{color:var(--c-inv)}
+@supports (-webkit-text-stroke:2px currentColor){
+  .intake h1 .hollow{-webkit-text-stroke:2px currentColor;color:transparent}
 }
+
+/* ---------------------------------------------------------- dialog */
+.dlg{
+  border:2px solid var(--bd);border-radius:12px;background:var(--paper);color:var(--ink);
+  padding:0;max-width:460px;width:calc(100% - 32px);box-shadow:7px 7px 0 0 var(--sh);
+}
+.dlg::backdrop{background:rgba(10,14,12,.55)}
+.dlg-in{padding:18px 20px 16px;display:flex;flex-direction:column;gap:13px}
+.dlg h2{font-size:19px}
+.dlg p{font-size:12.5px;line-height:1.5;font-weight:500;color:var(--ink-2)}
+.dlg p b{color:var(--ink)}
+.dlg-actions{display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end;margin-top:3px}
+.dlg .modes{display:flex;flex-direction:column;gap:8px}
+.dlg .mrow{
+  display:grid;grid-template-columns:auto 1fr;gap:10px;padding:10px 12px;
+  border:1.5px solid var(--grid);border-radius:8px;font-size:12px;line-height:1.45;
+}
+.dlg .mrow.on{border-color:var(--c-ef);background:var(--c-ef-w)}
+.dlg .mrow b{display:block;font-size:12.5px;margin-bottom:2px;color:var(--ink)}
+.dlg .tick{font-weight:800;color:var(--c-ef)}
 .intake .lede{max-width:60ch;font-size:15.5px;font-weight:500;line-height:1.5}
 .pill{
   display:inline-flex;align-items:center;gap:8px;padding:5px 13px;border-radius:999px;
-  border:1.5px solid var(--bd);background:var(--paper);color:var(--ink);font-size:11px;font-weight:800;
+  border:1.5px solid var(--pill-bd);background:var(--pill-bg);color:var(--pill-fg);font-size:11px;font-weight:800;
   letter-spacing:.09em;text-transform:uppercase;
 }
-:root[data-theme="dark"] .pill{border-color:var(--yel);background:transparent;color:var(--yel)}
 
 .case-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
 .case{
@@ -229,8 +286,7 @@ button{font:inherit;color:inherit;font-family:var(--sans)}
   display:flex;gap:18px;flex-wrap:wrap;align-items:center;justify-content:space-between;
   border-top:2px solid currentColor;padding-top:16px;font-size:11.5px;font-weight:600;
 }
-.marq{overflow:hidden;border-top:1.5px solid var(--bd);border-bottom:1.5px solid var(--bd);background:var(--char)}
-:root[data-theme="dark"] .marq{border-color:var(--yel)}
+.marq{overflow:hidden;border-top:1.5px solid var(--marq-bd);border-bottom:1.5px solid var(--marq-bd);background:var(--char)}
 .marq-in{display:flex;gap:38px;padding:9px 0;white-space:nowrap;animation:marq 26s linear infinite;color:var(--sage);font-weight:800;font-size:12px;letter-spacing:.12em}
 @keyframes marq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
@@ -238,15 +294,14 @@ button{font:inherit;color:inherit;font-family:var(--sans)}
 .hidden{display:none !important}
 .bar{
   position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
-  padding:9px 18px;background:var(--char);border-bottom:1.5px solid var(--bd);color:#eef1ec;
+  padding:9px 18px;background:var(--bar-bg);border-bottom:1.5px solid var(--bd);color:var(--on-char);
 }
-:root[data-theme="dark"] .bar{background:#0f1512}
 .bar .who{display:flex;flex-direction:column;margin-right:auto;min-width:0}
 .bar .who b{font-size:14px;font-weight:800;letter-spacing:-.02em}
 .bar .who span{font-size:10.5px;color:var(--sage);font-family:var(--mono)}
 .bar .btn{box-shadow:2px 2px 0 0 rgba(0,0,0,.6)}
 .mode{
-  display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:5px;
+  display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:5px;cursor:pointer;
   border:1.5px solid var(--sage);font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
 }
 .mode .led{width:7px;height:7px;border-radius:50%;background:currentColor}
@@ -320,8 +375,7 @@ tr.sel input{background:var(--yel);color:var(--on-yel)}
   background:var(--paper-2);font-size:11px;font-weight:800;letter-spacing:-.01em;
   transition:transform .12s,box-shadow .12s;
 }
-.sortb[aria-pressed="true"]{background:var(--char);color:#eef1ec;box-shadow:2px 2px 0 0 var(--sh)}
-:root[data-theme="dark"] .sortb[aria-pressed="true"]{background:var(--yel);color:var(--on-yel)}
+.sortb[aria-pressed="true"]{background:var(--sortb-on-bg);color:var(--sortb-on-fg);box-shadow:2px 2px 0 0 var(--sh)}
 /* Horizontal bar chart. Bar length is balance (the magnitude); APR is a second
    measure on a different scale, so it is never a second axis — it sets the fill
    from a single-hue sequential ramp and is stated as a direct label. The rule
@@ -436,8 +490,7 @@ tr.sel input{background:var(--yel);color:var(--on-yel)}
 .tick::before{content:attr(data-label);position:absolute;top:-1px;left:4px;font-family:var(--mono);font-size:9px;font-weight:800;white-space:nowrap}
 
 /* ============================================================== RULING */
-.ruling{background:var(--char);color:#e9ede8;border:2px solid var(--bd);border-radius:var(--r);box-shadow:7px 7px 0 0 var(--sh);overflow:hidden}
-:root[data-theme="dark"] .ruling{background:#0f1512}
+.ruling{background:var(--ruling-bg);color:var(--on-char);border:2px solid var(--bd);border-radius:var(--r);box-shadow:7px 7px 0 0 var(--sh);overflow:hidden}
 .ruling-hd{display:flex;align-items:center;gap:11px;padding:12px 16px;border-bottom:2px solid var(--yel);background:var(--yel);color:var(--on-yel)}
 .ruling-hd h2{font-size:19px}
 .ruling-bd{padding:17px;display:flex;flex-direction:column;gap:18px}
@@ -504,8 +557,7 @@ tr.sel input{background:var(--yel);color:var(--on-yel)}
 .led.budget .ledbtn{border-left-color:var(--c-ef)}
 .led.debt .ledbtn{border-left-color:var(--c-debt)}
 .led.invest .ledbtn{border-left-color:var(--c-inv)}
-.led.coordinator .ledbtn{border-left-color:var(--char)}
-:root[data-theme="dark"] .led.coordinator .ledbtn{border-left-color:var(--sage)}
+.led.coordinator .ledbtn{border-left-color:var(--coord-rail)}
 .ledn{font-family:var(--mono);font-size:10px;font-weight:800;opacity:.6}
 .ledt{font-size:8.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:2px 6px;border:1.5px solid var(--bd);border-radius:4px;white-space:nowrap}
 .ledt.t-conflict{background:var(--c-debt-w);border-color:var(--c-debt);color:var(--ink)}
@@ -573,7 +625,7 @@ details.about code{font-family:var(--mono);font-size:10.5px;background:var(--yel
 
     <div class="intake-foot">
       <span>Every figure is editable once a file is open. Nothing is stored — the session lives in memory.</span>
-      <span id="intake-mode" class="num">checking model access…</span>
+      <button class="btn btn-sm" id="intake-mode">checking model access…</button>
     </div>
   </div>
 </section>
@@ -583,7 +635,7 @@ details.about code{font-family:var(--mono);font-size:10.5px;background:var(--yel
   <div class="bar">
     <button class="btn btn-sm" id="btn-back">← Clients</button>
     <span class="who"><b id="bar-name">—</b><span id="bar-occ">—</span></span>
-    <span class="mode" id="mode-pill"><span class="led"></span><span id="mode-txt">…</span></span>
+    <button class="mode" id="mode-pill" title="Choose where the agents run"><span class="led"></span><span id="mode-txt">…</span></button>
     <button class="btn btn-sm" id="btn-theme-2">◐</button>
     <button class="btn btn-sm" id="btn-print">Print</button>
     <button class="btn btn-sm" id="btn-copy">Copy</button>
@@ -700,6 +752,26 @@ details.about code{font-family:var(--mono);font-size:10.5px;background:var(--yel
 
 <div class="toast" id="toast" role="status"></div>
 
+<dialog class="dlg" id="keydlg" aria-labelledby="keydlg-h">
+  <div class="dlg-in">
+    <h2 id="keydlg-h">Model access</h2>
+    <div class="modes" id="dlg-modes"></div>
+    <div class="field">
+      <label for="apikey">Anthropic API key</label>
+      <input type="password" id="apikey" placeholder="sk-ant-…" autocomplete="off" spellcheck="false">
+    </div>
+    <p>The key is held in memory for this tab only — never written to disk, never sent
+    anywhere except <b>api.anthropic.com</b>. Close the tab and it is gone. Browsers send
+    an <b>Origin</b> header the API rejects from <code>file://</code>, so for live mode serve
+    the folder (<b>npx serve</b>) rather than double-clicking the file.</p>
+    <div class="dlg-actions">
+      <button class="btn btn-sm" id="btn-key-cancel">Cancel</button>
+      <button class="btn btn-sm" id="btn-key-clear">Use local engine</button>
+      <button class="btn btn-sm btn-y" id="btn-key-save">Connect</button>
+    </div>
+  </div>
+</dialog>
+
 <script>
 "use strict";
 
@@ -798,7 +870,7 @@ const state = {
   plan:null, guardrails:null, projection:null,
   ledger:[], expanded:new Set(), ledgerFilter:"all",
   sort:"apr", view:"chart", selectedDebt:null,
-  mode:"unknown", running:false
+  mode:"unknown", reason:"blocked", apiKey:null, running:false
 };
 
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
@@ -1022,11 +1094,22 @@ function parseJSONLoose(text){
   return JSON.parse(t.slice(a,b+1));
 }
 
+/* A key is only needed when running standalone. Inside a host that already
+   authenticates the call, the header is simply absent and the host supplies it. */
+function apiHeaders(){
+  const h = {
+    "content-type":"application/json",
+    "anthropic-version":"2023-06-01",
+    "anthropic-dangerous-direct-browser-access":"true"
+  };
+  if (state.apiKey) h["x-api-key"] = state.apiKey;
+  return h;
+}
+
 async function callModel(system, user, onDelta){
   const res = await fetch(API, {
     method:"POST",
-    headers:{ "content-type":"application/json", "anthropic-version":"2023-06-01",
-              "anthropic-dangerous-direct-browser-access":"true" },
+    headers: apiHeaders(),
     body: JSON.stringify({ model:MODEL, max_tokens:MAX_TOKENS, stream:true,
                            system, messages:[{ role:"user", content:user }] })
   });
@@ -1062,20 +1145,65 @@ async function callModel(system, user, onDelta){
   return out;
 }
 
+/* Decide honestly which of the two engines is actually available.
+   reason: "ready" | "auth" | "blocked" | "error" — drives what the UI offers. */
 async function probeAPI(){
+  state.mode = "local"; state.reason = "blocked";
   try{
     const c = new AbortController();
-    const t = setTimeout(() => c.abort(), 6000);
+    const t = setTimeout(() => c.abort(), 7000);
     const res = await fetch(API, {
-      method:"POST", signal:c.signal,
-      headers:{ "content-type":"application/json", "anthropic-version":"2023-06-01",
-                "anthropic-dangerous-direct-browser-access":"true" },
+      method:"POST", signal:c.signal, headers:apiHeaders(),
       body: JSON.stringify({ model:MODEL, max_tokens:1, messages:[{ role:"user", content:"hi" }] })
     });
     clearTimeout(t);
-    state.mode = res.status < 500 ? "api" : "local";
-  }catch(e){ state.mode = "local"; }
+    if (res.status === 401 || res.status === 403){ state.mode = "local"; state.reason = "auth"; }
+    else if (res.status < 500){ state.mode = "api"; state.reason = "ready"; }
+    else { state.mode = "local"; state.reason = "error"; }
+  }catch(e){
+    state.mode = "local";
+    state.reason = state.apiKey ? "error" : "blocked";
+  }
   renderMode();
+}
+
+/* ---- model-access dialog ---- */
+function openKeyDialog(){
+  const dlg = document.getElementById("keydlg");
+  const live = state.mode === "api";
+  document.getElementById("dlg-modes").innerHTML = `
+    <div class="mrow ${!live?"on":""}"><span class="tick">${!live?"●":"○"}</span>
+      <span><b>Local rule engine${!live?" — active":""}</b>
+      Runs with no key and no network. Every figure is computed from the client file by
+      this page's own code — deterministic, and never labelled as model output.</span></div>
+    <div class="mrow ${live?"on":""}"><span class="tick">${live?"●":"○"}</span>
+      <span><b>Live agents${live?" — active":""}</b>
+      Four streamed calls to <b>${MODEL}</b>. Needs an API key below${
+        state.reason === "blocked" ? ", and a page served over http rather than file://" : ""}.</span></div>`;
+  document.getElementById("apikey").value = state.apiKey || "";
+  if (typeof dlg.showModal === "function") dlg.showModal(); else dlg.setAttribute("open","");
+}
+function closeKeyDialog(){
+  const dlg = document.getElementById("keydlg");
+  if (typeof dlg.close === "function") dlg.close(); else dlg.removeAttribute("open");
+}
+async function connectKey(){
+  const v = document.getElementById("apikey").value.trim();
+  if (!v){ toast("Paste a key, or choose the local engine."); return; }
+  state.apiKey = v;
+  closeKeyDialog();
+  state.mode = "unknown"; renderMode();
+  say("Checking model access.");
+  await probeAPI();
+  if (state.mode === "api") toast("Connected — agents will call " + MODEL + ".");
+  else if (state.reason === "auth") toast("That key was rejected. Still on the local engine.");
+  else toast("Could not reach the API. Still on the local engine.");
+}
+function clearKey(){
+  state.apiKey = null;
+  state.mode = "local"; state.reason = "blocked";
+  closeKeyDialog(); renderMode();
+  toast("Running on the local engine.");
 }
 
 /* =====================================================================
@@ -1999,19 +2127,27 @@ function renderMode(){
   const banner = document.getElementById("mode-banner");
   const intakeM = document.getElementById("intake-mode");
   if (state.mode === "api"){
-    pill.className = "mode live"; txt.textContent = "live model";
-    intakeM.textContent = "● live model calls — " + MODEL;
+    pill.className = "mode live"; txt.textContent = "live agents";
+    intakeM.textContent = "● Live agents — " + MODEL;
     if (banner) banner.innerHTML = "";
   } else if (state.mode === "local"){
     pill.className = "mode local"; txt.textContent = "local engine";
-    intakeM.textContent = "● api.anthropic.com unreachable — local rule engine";
-    if (banner) banner.innerHTML = `<div class="banner hot no-print">
-      <span>▲</span><span><b>No model calls are being made.</b> api.anthropic.com is not reachable from this page,
-      so the four agents are running as a local deterministic rule engine. Every figure below is still computed from
-      the live client file — but the wording is generated by this page's own code, not by ${MODEL}. Open
-      <code>index.html</code> where the API is reachable to see the real negotiation, with token streaming.</span></div>`;
+    intakeM.textContent = "● Local engine — click to connect a model";
+    const why = state.reason === "auth"
+      ? "The API key supplied was rejected."
+      : state.reason === "error"
+        ? "The API answered with an error."
+        : "No API key is set for this page.";
+    if (banner) banner.innerHTML = `<div class="banner no-print">
+      <span>◆</span><span><b>Running on the local rule engine — no model calls are being made.</b>
+      ${why} The four agents are being played by this page's own deterministic code: every figure below is still
+      computed from the live client file, but the wording is not written by ${MODEL}, and it is never presented as
+      though it were. <button class="btn btn-sm" id="btn-connect" style="margin-top:8px">Connect a model →</button></span></div>`;
+    const cb = document.getElementById("btn-connect");
+    if (cb) cb.addEventListener("click", openKeyDialog);
   } else {
-    pill.className = "mode"; txt.textContent = "checking";
+    pill.className = "mode"; txt.textContent = "checking…";
+    intakeM.textContent = "checking model access…";
   }
 }
 
@@ -2165,6 +2301,15 @@ function boot(){
   document.getElementById("btn-print").addEventListener("click", () => window.print());
   document.getElementById("btn-theme-1").addEventListener("click", toggleTheme);
   document.getElementById("btn-theme-2").addEventListener("click", toggleTheme);
+
+  document.getElementById("mode-pill").addEventListener("click", openKeyDialog);
+  document.getElementById("intake-mode").addEventListener("click", openKeyDialog);
+  document.getElementById("btn-key-save").addEventListener("click", connectKey);
+  document.getElementById("btn-key-clear").addEventListener("click", clearKey);
+  document.getElementById("btn-key-cancel").addEventListener("click", closeKeyDialog);
+  document.getElementById("apikey").addEventListener("keydown", e => {
+    if (e.key === "Enter"){ e.preventDefault(); connectKey(); }
+  });
 
   document.querySelectorAll(".filt").forEach(b => b.addEventListener("click", () => {
     state.ledgerFilter = b.dataset.f;
