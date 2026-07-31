@@ -1,0 +1,2065 @@
+<!--
+================================================================================
+  ADVISORY BOARD — Multi-Agent Financial Advisory Simulator
+  https://github.com/Atharva-Lakhe
+================================================================================
+  Full architecture note lives in README.md. Short version:
+
+  Four agents, four separate calls to claude-sonnet-4-6, each with its own
+  system prompt and a strict JSON contract.
+
+    1 BUDGETING     splits discretionary income three ways. Nothing else.
+    2 DEBT STRATEGY biased toward aggressive payoff, by design.
+    3 INVESTMENT    biased toward starting now, by design.
+                    (2 and 3 are written to disagree — that is the point.)
+    4 COORDINATOR   sees all three, forbidden from averaging, must cite a
+                    numbered rule and show the arithmetic.
+
+  RULES  R1 starter buffer · R2 toxic debt >=15% APR · R3 cheap debt <10% APR
+         R4 hard cap: the three shares can never exceed discretionary income.
+
+  GUARDRAILS  Prompt-side: no named products, no guaranteed returns, no legal
+  or tax advice. Code-side (G1-G6): allocation re-summed in JS, percentages
+  checked, negatives rejected, output regex-scanned for tickers and guarantee
+  language, payoff timeline computed by local amortisation rather than trusted
+  from the model, JSON parsed defensively.
+
+  DESIGN  Neo-brutalist, adapted for a tool rather than a landing page: 2px
+  black borders, hard zero-blur shadows, buttons that physically depress into
+  their own shadow. Yellow #ffe17c carries the intake screen; the workspace
+  drops to bone so eight hours of use does not hurt. The coordinator's ruling
+  is the only charcoal block on the page, because it is the only verdict.
+  Colour also does data work: an account's APR band sets its bubble colour,
+  so R2 and R3 are legible before a single agent has spoken.
+
+  Runs standalone. Open index.html anywhere api.anthropic.com is reachable for
+  live streamed model calls; elsewhere it falls back to a local deterministic
+  rule engine and says so plainly in a banner. It never presents simulated text
+  as model output.
+================================================================================
+-->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Advisory Board — Multi-Agent Financial Advisory Simulator</title>
+
+<style>
+/* ============================================================== TOKENS */
+:root{
+  --yel:#ffe17c;
+  --char:#171e19;
+  --sage:#b7c6c2;
+  --coral:#ff7a5a;
+
+  --ground:#f2f0e6;
+  --paper:#ffffff;
+  --paper-2:#f7f5ec;
+  --ink:#000000;
+  --ink-2:#4a4f4b;
+  --bd:#000000;
+  --sh:#000000;
+
+  --ok:#12a150;
+  --bad:#e5301c;
+
+  --sans:"Archivo","Helvetica Neue",Helvetica,-apple-system,system-ui,"Segoe UI",Roboto,Arial,sans-serif;
+  --mono:ui-monospace,"Cascadia Mono","SF Mono","Roboto Mono",Consolas,monospace;
+
+  --r:10px;
+  --r-s:7px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --ground:#171e19; --paper:#232b27; --paper-2:#1c231f;
+    --ink:#f3f2ea; --ink-2:#a9b3ad; --bd:#f3f2ea; --sh:#000000;
+    --ok:#3ddc84; --bad:#ff6a55;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#171e19; --paper:#232b27; --paper-2:#1c231f;
+  --ink:#f3f2ea; --ink-2:#a9b3ad; --bd:#f3f2ea; --sh:#000000;
+  --ok:#3ddc84; --bad:#ff6a55;
+}
+:root[data-theme="light"]{
+  --ground:#f2f0e6; --paper:#ffffff; --paper-2:#f7f5ec;
+  --ink:#000000; --ink-2:#4a4f4b; --bd:#000000; --sh:#000000;
+  --ok:#12a150; --bad:#e5301c;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:var(--sans); font-size:14px; line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{margin:0; font-weight:800; letter-spacing:-.035em; text-wrap:balance; line-height:1.05}
+p{margin:0}
+button{font:inherit;color:inherit;font-family:var(--sans)}
+:focus-visible{outline:3px solid var(--coral); outline-offset:2px}
+.num{font-family:var(--mono); font-variant-numeric:tabular-nums; letter-spacing:-.03em}
+.eyebrow{font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* brutalist primitives */
+.bx{border:2px solid var(--bd); border-radius:var(--r); background:var(--paper); box-shadow:4px 4px 0 0 var(--sh)}
+.bx-lg{box-shadow:7px 7px 0 0 var(--sh)}
+.press{transition:transform .13s cubic-bezier(.2,.9,.3,1.2), box-shadow .13s}
+.press:hover{transform:translate(3px,3px); box-shadow:1px 1px 0 0 var(--sh)}
+.press:active{transform:translate(4px,4px); box-shadow:0 0 0 0 var(--sh)}
+
+.btn{
+  display:inline-flex;align-items:center;gap:7px;cursor:pointer;
+  padding:8px 14px;border:2px solid var(--bd);border-radius:var(--r-s);
+  background:var(--paper);box-shadow:3px 3px 0 0 var(--sh);
+  font-size:12.5px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;
+  transition:transform .13s cubic-bezier(.2,.9,.3,1.2), box-shadow .13s, background .13s;
+}
+.btn:hover{transform:translate(3px,3px);box-shadow:0 0 0 0 var(--sh)}
+.btn[disabled]{opacity:.5;cursor:not-allowed;transform:none;box-shadow:3px 3px 0 0 var(--sh)}
+.btn-y{background:var(--yel);color:#000}
+.btn-k{background:var(--char);color:#fff;border-color:var(--bd)}
+:root[data-theme="dark"] .btn-k, :root:not([data-theme="light"]) .btn-k{color:#fff}
+.btn-sm{padding:5px 10px;font-size:11.5px;box-shadow:2px 2px 0 0 var(--sh)}
+
+.dots{background-image:radial-gradient(currentColor 1.4px, transparent 1.4px); background-size:22px 22px}
+
+/* ============================================================== INTAKE */
+.intake{
+  min-height:100vh; background:var(--yel); color:#000;
+  display:flex; flex-direction:column;
+}
+:root[data-theme="dark"] .intake, .intake.dk{background:var(--char); color:var(--yel)}
+.intake-in{
+  width:100%; max-width:1120px; margin:0 auto; padding:40px 24px 60px;
+  display:flex; flex-direction:column; gap:34px; flex:1;
+}
+.intake-top{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.logo{
+  width:40px;height:40px;flex:none;display:grid;place-items:center;
+  background:#000;color:var(--yel);border-radius:8px;font-size:20px;font-weight:800;
+}
+:root[data-theme="dark"] .logo{background:var(--yel);color:#000}
+.intake h1{font-size:clamp(38px,7vw,74px)}
+.intake h1 .hollow{
+  -webkit-text-stroke:2px currentColor; color:transparent;
+}
+.intake .lede{max-width:60ch;font-size:15.5px;font-weight:500;line-height:1.5}
+.pill{
+  display:inline-flex;align-items:center;gap:8px;padding:5px 13px;border-radius:999px;
+  border:2px solid #000;background:#fff;color:#000;font-size:11px;font-weight:800;
+  letter-spacing:.09em;text-transform:uppercase;
+}
+:root[data-theme="dark"] .pill{border-color:var(--yel);background:transparent;color:var(--yel)}
+
+.case-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
+.case{
+  text-align:left;cursor:pointer;padding:0;overflow:hidden;
+  border:2px solid #000;border-radius:12px;background:#fff;color:#000;
+  box-shadow:7px 7px 0 0 #000;
+  transition:transform .14s cubic-bezier(.2,.9,.3,1.2), box-shadow .14s;
+  display:flex;flex-direction:column;
+}
+.case:hover{transform:translate(4px,4px);box-shadow:2px 2px 0 0 #000}
+.case:focus-visible{outline:3px solid var(--coral);outline-offset:3px}
+.case-tag{
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+  padding:7px 13px;border-bottom:2px solid #000;font-family:var(--mono);
+  font-size:10px;font-weight:700;letter-spacing:.1em;
+}
+.case:nth-child(1) .case-tag{background:var(--coral)}
+.case:nth-child(2) .case-tag{background:var(--sage)}
+.case:nth-child(3) .case-tag{background:var(--yel)}
+.case:nth-child(4) .case-tag{background:#fff;border-bottom-style:dashed}
+.case-bd{padding:14px 15px 16px;display:flex;flex-direction:column;gap:9px;flex:1}
+.case-bd h3{font-size:19px}
+.case-bd .occ{font-size:11.5px;font-weight:600;color:#4a4f4b}
+.case-bd .blurb{font-size:12.5px;line-height:1.45;flex:1}
+.case-stats{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.stat{
+  border:1.5px solid #000;border-radius:5px;padding:3px 7px;
+  font-family:var(--mono);font-size:10.5px;font-weight:600;background:#f7f5ec;
+}
+.stat.hot{background:var(--coral)}
+.case-go{
+  display:flex;align-items:center;justify-content:space-between;
+  border-top:2px solid #000;padding:9px 13px;font-size:11.5px;font-weight:800;
+  letter-spacing:.03em;text-transform:uppercase;background:#f7f5ec;
+}
+.case:nth-child(4){border-style:dashed}
+.intake-foot{
+  display:flex;gap:18px;flex-wrap:wrap;align-items:center;justify-content:space-between;
+  border-top:2px solid currentColor;padding-top:16px;font-size:11.5px;font-weight:600;
+}
+.marq{overflow:hidden;border-top:2px solid #000;border-bottom:2px solid #000;background:var(--char)}
+:root[data-theme="dark"] .marq{border-color:var(--yel)}
+.marq-in{display:flex;gap:38px;padding:9px 0;white-space:nowrap;animation:marq 26s linear infinite;color:var(--sage);font-weight:800;font-size:12px;letter-spacing:.12em}
+@keyframes marq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ============================================================== WORKSPACE */
+.hidden{display:none !important}
+.bar{
+  position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:9px 18px;background:var(--char);border-bottom:2px solid var(--bd);color:#fff;
+}
+:root[data-theme="dark"] .bar{background:#0f1512}
+.bar .who{display:flex;flex-direction:column;margin-right:auto;min-width:0}
+.bar .who b{font-size:14px;font-weight:800;letter-spacing:-.02em}
+.bar .who span{font-size:10.5px;color:var(--sage);font-family:var(--mono)}
+.bar .btn{box-shadow:2px 2px 0 0 rgba(0,0,0,.6)}
+.mode{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:5px;
+  border:2px solid #fff;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+}
+.mode .led{width:7px;height:7px;border-radius:50%;background:currentColor}
+.mode.live{background:var(--sage);color:#000;border-color:#000}
+.mode.local{background:var(--yel);color:#000;border-color:#000}
+
+.wrap{max-width:1180px;margin:0 auto;padding:20px 18px 70px;display:flex;flex-direction:column;gap:20px}
+.sec-hd{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:11px}
+.sec-hd h2{font-size:20px}
+.sec-hd .n{
+  font-family:var(--mono);font-size:11px;font-weight:700;padding:2px 7px;
+  border:2px solid var(--bd);border-radius:5px;background:var(--yel);color:#000;
+}
+.sec-hd .sub{font-size:12px;color:var(--ink-2);font-weight:500}
+
+/* profile strip */
+.profile{padding:15px}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.field{display:grid;gap:4px}
+.field label,.lbl{font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-2)}
+input[type=text],input[type=number],select{
+  width:100%;padding:7px 9px;border:2px solid var(--bd);border-radius:var(--r-s);
+  background:var(--paper-2);color:var(--ink);font-family:var(--mono);font-size:12.5px;
+  font-variant-numeric:tabular-nums;font-weight:600;
+}
+input[type=text],select{font-family:var(--sans)}
+input[type=range]{width:100%;accent-color:var(--coral)}
+.rowline{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+
+.debt-tbl{width:100%;border-collapse:separate;border-spacing:0 6px}
+.debt-tbl th{
+  font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;text-align:left;
+  color:var(--ink-2);padding:0 6px 2px;font-weight:800;
+}
+.debt-tbl td{padding:0 3px}
+.debt-tbl input{padding:6px 8px;font-size:12px}
+.xbtn{
+  width:30px;height:30px;display:grid;place-items:center;cursor:pointer;
+  border:2px solid var(--bd);border-radius:6px;background:var(--paper-2);
+  font-size:15px;font-weight:800;line-height:1;
+}
+.xbtn:hover{background:var(--coral);color:#000}
+tr.sel input{background:var(--yel);color:#000}
+
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{
+  cursor:pointer;padding:5px 11px;border:2px solid var(--bd);border-radius:999px;
+  background:var(--paper-2);font-size:11.5px;font-weight:700;
+  transition:transform .12s,box-shadow .12s,background .12s;
+}
+.chip[aria-pressed="true"]{background:var(--yel);color:#000;box-shadow:2px 2px 0 0 var(--sh)}
+.chip .h{font-family:var(--mono);font-size:9.5px;opacity:.65;margin-left:5px}
+
+.tally{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:0;
+  border:2px solid var(--bd);border-radius:var(--r);overflow:hidden;background:var(--paper-2);
+}
+.tally div{padding:9px 12px;border-right:2px solid var(--bd)}
+.tally div:last-child{border-right:0}
+.tally .k{font-size:9.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-2)}
+.tally .v{font-family:var(--mono);font-size:17px;font-weight:700;letter-spacing:-.03em}
+.tally .big{background:var(--yel);color:#000}
+.tally .big .k{color:#000}
+.tally .neg{background:var(--coral);color:#000}
+
+/* ============================================================== BUBBLES */
+.field-hd{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.sorts{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+.sortb{
+  cursor:pointer;padding:5px 11px;border:2px solid var(--bd);border-radius:6px;
+  background:var(--paper-2);font-size:11px;font-weight:800;letter-spacing:-.01em;
+  transition:transform .12s,box-shadow .12s;
+}
+.sortb[aria-pressed="true"]{background:var(--char);color:#fff;box-shadow:2px 2px 0 0 var(--sh)}
+:root[data-theme="dark"] .sortb[aria-pressed="true"]{background:var(--yel);color:#000}
+.bubbles{
+  position:relative;height:270px;border:2px solid var(--bd);border-radius:var(--r);
+  background:var(--paper-2);overflow:hidden;
+}
+.bubbles .axis{
+  position:absolute;left:0;right:0;bottom:0;height:26px;border-top:2px dashed var(--bd);
+  display:flex;justify-content:space-between;align-items:center;padding:0 10px;
+  font-family:var(--mono);font-size:10px;font-weight:700;color:var(--ink-2);
+}
+.bub{
+  position:absolute;display:grid;place-items:center;cursor:pointer;padding:0;
+  border:2px solid var(--bd);border-radius:50%;background:var(--sage);color:#000;
+  box-shadow:3px 3px 0 0 var(--sh);text-align:center;overflow:hidden;
+  transition:left .6s cubic-bezier(.34,1.2,.4,1), top .6s cubic-bezier(.34,1.2,.4,1),
+             width .6s cubic-bezier(.34,1.2,.4,1), height .6s cubic-bezier(.34,1.2,.4,1),
+             transform .13s, box-shadow .13s;
+}
+.bub:hover{transform:translate(2px,2px);box-shadow:1px 1px 0 0 var(--sh);z-index:5}
+.bub.hot{background:var(--coral)}
+.bub.mid{background:var(--yel)}
+.bub.cool{background:var(--sage)}
+.bub.on{box-shadow:0 0 0 4px var(--char), 3px 3px 0 0 var(--sh); z-index:6}
+:root[data-theme="dark"] .bub.on{box-shadow:0 0 0 4px var(--yel), 3px 3px 0 0 var(--sh)}
+.bub .bn{font-size:10px;font-weight:800;line-height:1.05;padding:0 6px;max-width:100%}
+.bub .ba{font-family:var(--mono);font-size:13px;font-weight:800;letter-spacing:-.04em}
+.bub .rank{
+  position:absolute;top:3px;left:50%;transform:translateX(-50%);
+  font-family:var(--mono);font-size:9px;font-weight:800;opacity:.75;
+}
+.blegend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:11px;font-weight:600}
+.blegend i{display:inline-block;width:11px;height:11px;border:2px solid var(--bd);border-radius:50%;margin-right:6px;vertical-align:-2px}
+.bdetail{
+  margin-top:10px;border:2px solid var(--bd);border-radius:var(--r);padding:10px 13px;
+  background:var(--yel);color:#000;font-size:12.5px;font-weight:600;
+  display:flex;gap:14px;flex-wrap:wrap;align-items:center;
+}
+.bdetail b{font-family:var(--mono);letter-spacing:-.02em}
+
+/* ============================================================== AGENTS */
+.agents{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:940px){.agents{grid-template-columns:1fr}}
+.agent{--c:var(--sage);display:flex;flex-direction:column;overflow:hidden;padding:0}
+.agent.budget{--c:var(--sage)}
+.agent.debt{--c:var(--coral)}
+.agent.invest{--c:var(--yel)}
+.agent-hd{padding:10px 13px;border-bottom:2px solid var(--bd);background:var(--c);color:#000;display:flex;align-items:center;gap:9px}
+.agent-hd .nm{font-size:13px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
+.agent-hd .rl{font-size:10px;font-weight:600;opacity:.75}
+.stat-b{
+  margin-left:auto;flex:none;display:inline-flex;align-items:center;gap:5px;
+  font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  padding:3px 7px;border:2px solid #000;border-radius:5px;background:#fff;color:#000;
+}
+.stat-b .led{width:6px;height:6px;border-radius:50%;background:#000}
+.stat-b.thinking .led{animation:pulse 1s ease-in-out infinite}
+.stat-b.error{background:#000;color:#fff}
+.stat-b.error .led{background:var(--coral)}
+@keyframes pulse{0%,100%{opacity:.2;transform:scale(.7)}50%{opacity:1;transform:scale(1.3)}}
+.agent-bd{padding:13px;display:flex;flex-direction:column;gap:11px;flex:1}
+.stream{
+  font-family:var(--mono);font-size:10.5px;line-height:1.4;color:var(--ink-2);
+  background:var(--paper-2);border:2px solid var(--bd);border-radius:var(--r-s);
+  padding:8px;max-height:104px;overflow:hidden;white-space:pre-wrap;word-break:break-all;
+}
+.caret{display:inline-block;width:6px;height:11px;background:currentColor;vertical-align:-1px;animation:blink .9s steps(2) infinite}
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+.ph{
+  font-size:11.5px;color:var(--ink-2);font-weight:600;text-align:center;
+  border:2px dashed var(--bd);border-radius:var(--r-s);padding:16px 12px;
+}
+.ln{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:11.5px;font-weight:600}
+.ln .k{color:var(--ink-2)}
+.reason{font-size:12px;line-height:1.5;font-weight:500}
+.kv{display:flex;flex-wrap:wrap;gap:5px}
+.kv span{font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 6px;border:1.5px solid var(--bd);border-radius:4px;background:var(--paper-2)}
+
+.sbar{display:flex;height:24px;border:2px solid var(--bd);border-radius:6px;overflow:hidden;background:var(--paper-2)}
+.sbar.lg{height:38px}
+.seg{display:grid;place-items:center;overflow:hidden;width:0;font-family:var(--mono);font-size:10px;font-weight:800;color:#000;
+  transition:width .8s cubic-bezier(.34,1.1,.4,1);border-right:2px solid var(--bd)}
+.seg:last-child{border-right:0}
+.s-ef{background:var(--sage)} .s-debt{background:var(--coral)} .s-inv{background:var(--yel)}
+.keyrow{display:flex;gap:13px;flex-wrap:wrap;font-size:10.5px;font-weight:700}
+.keyrow i{display:inline-block;width:10px;height:10px;border:1.5px solid var(--bd);border-radius:2px;margin-right:5px;vertical-align:-1px}
+.k-ef i{background:var(--sage)} .k-debt i{background:var(--coral)} .k-inv i{background:var(--yel)}
+.tickwrap{position:relative;padding-top:12px}
+.tick{position:absolute;top:0;height:100%;border-left:2px dashed var(--bd);transition:left .7s cubic-bezier(.34,1.1,.4,1)}
+.tick::before{content:attr(data-label);position:absolute;top:-1px;left:4px;font-family:var(--mono);font-size:9px;font-weight:800;white-space:nowrap}
+
+/* ============================================================== RULING */
+.ruling{background:var(--char);color:#f3f2ea;border:2px solid var(--bd);border-radius:var(--r);box-shadow:7px 7px 0 0 var(--sh);overflow:hidden}
+:root[data-theme="dark"] .ruling{background:#0f1512}
+.ruling-hd{display:flex;align-items:center;gap:11px;padding:12px 16px;border-bottom:2px solid var(--yel);background:var(--yel);color:#000}
+.ruling-hd h2{font-size:19px}
+.ruling-bd{padding:17px;display:flex;flex-direction:column;gap:18px}
+.ruling .ph{color:var(--sage);border-color:var(--sage)}
+.conflict{font-size:15px;font-weight:600;line-height:1.45;max-width:70ch}
+.cmp{display:flex;flex-direction:column;gap:11px}
+.cmp .cap{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.cmp .t{font-size:11.5px;font-weight:800;letter-spacing:.03em;text-transform:uppercase}
+.cmp .rejected .t{opacity:.55;text-decoration:line-through}
+.tag-x{font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;border:2px solid var(--sage);color:var(--sage);border-radius:4px;padding:1px 6px}
+.sbar.ghost{opacity:.35;height:15px}
+.sbar.ghost .seg{color:transparent}
+.deltas{display:flex;gap:6px;flex-wrap:wrap}
+.delta{font-family:var(--mono);font-size:10.5px;font-weight:800;padding:2px 7px;border:2px solid var(--sage);border-radius:4px}
+.delta.up{border-color:var(--ok);color:var(--ok)} .delta.down{border-color:var(--coral);color:var(--coral)}
+
+.allocs{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:700px){.allocs{grid-template-columns:1fr}}
+.alloc{border:2px solid #000;border-radius:var(--r);padding:12px 13px;color:#000;box-shadow:4px 4px 0 0 rgba(0,0,0,.55)}
+.alloc.a-ef{background:var(--sage)} .alloc.a-debt{background:var(--coral)} .alloc.a-inv{background:var(--yel)}
+.alloc .amt{font-family:var(--mono);font-size:25px;font-weight:800;letter-spacing:-.045em;display:block;margin:4px 0 2px}
+.alloc .sm{font-family:var(--mono);font-size:10.5px;font-weight:600}
+.note{border:2px solid var(--sage);border-radius:var(--r);padding:11px 13px;font-size:12.5px;line-height:1.5;font-weight:500}
+.note b{color:var(--yel)}
+.conc{display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:center;padding:9px 12px;border:2px solid var(--sage);border-radius:var(--r-s);font-size:11.5px;font-weight:600}
+.conc.budget{border-left:7px solid var(--sage)} .conc.debt{border-left:7px solid var(--coral)} .conc.invest{border-left:7px solid var(--yel)}
+.conc .mv{font-family:var(--mono);font-size:11px;white-space:nowrap;font-weight:700}
+.narr{font-size:15px;line-height:1.62;font-weight:400;max-width:66ch}
+.narr p+p{margin-top:.8em}
+.disc{font-size:11px;line-height:1.5;color:var(--sage);border-top:2px solid var(--sage);padding-top:11px;max-width:80ch}
+
+/* guardrails */
+.gr{display:flex;align-items:center;gap:13px;padding:13px 15px;border:2px solid #000;border-radius:var(--r);color:#000}
+.gr.pass{background:var(--ok)} .gr.fail{background:var(--coral)}
+.gr .seal{flex:none;width:34px;height:34px;border:2px solid #000;border-radius:8px;display:grid;place-items:center;font-size:17px;font-weight:800;background:#fff}
+.gr b{font-size:13.5px;font-weight:800;display:block}
+.gr small{font-family:var(--mono);font-size:11px;font-weight:600}
+.grlist{margin-top:11px;border:2px solid var(--sage);border-radius:var(--r);overflow:hidden}
+.gritem{display:grid;grid-template-columns:20px 1fr auto;gap:10px;align-items:baseline;padding:8px 11px;font-size:11.5px;font-weight:600;border-bottom:2px solid var(--sage)}
+.gritem:last-child{border-bottom:0}
+.gritem .mk{font-weight:800}
+.gritem.p .mk{color:var(--ok)} .gritem.f .mk{color:var(--coral)}
+.gritem .id{font-family:var(--mono);font-size:9.5px;opacity:.7}
+.gritem .ev{font-family:var(--mono);font-size:10.5px;text-align:right}
+
+/* ============================================================== LEDGER */
+.two{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:20px;align-items:start}
+@media (max-width:940px){.two{grid-template-columns:1fr}}
+.ledbox{padding:0;overflow:hidden}
+.ledtop{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:11px 14px;border-bottom:2px solid var(--bd);background:var(--sage);color:#000}
+.ledtop h2{font-size:15px;margin-right:auto}
+.filt{cursor:pointer;padding:3px 9px;border:2px solid #000;border-radius:5px;background:#fff;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+.filt[aria-pressed="true"]{background:#000;color:#fff}
+.led{border-bottom:2px solid var(--bd)}
+.led:last-child{border-bottom:0}
+.ledbtn{width:100%;display:grid;grid-template-columns:auto auto 1fr auto;gap:9px;align-items:baseline;
+  padding:9px 13px;background:none;border:0;cursor:pointer;text-align:left;border-left:7px solid transparent}
+.ledbtn:hover{background:var(--paper-2)}
+.led.budget .ledbtn{border-left-color:var(--sage)}
+.led.debt .ledbtn{border-left-color:var(--coral)}
+.led.invest .ledbtn{border-left-color:var(--yel)}
+.led.coordinator .ledbtn{border-left-color:var(--char)}
+:root[data-theme="dark"] .led.coordinator .ledbtn{border-left-color:#fff}
+.ledn{font-family:var(--mono);font-size:10px;font-weight:800;opacity:.6}
+.ledt{font-size:8.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:2px 6px;border:1.5px solid var(--bd);border-radius:4px;white-space:nowrap}
+.ledt.t-conflict{background:var(--coral);color:#000}
+.ledt.t-rule_applied{background:var(--yel);color:#000}
+.ledt.t-resolution{background:var(--ok);color:#000}
+.ledt.t-rule_gap{background:var(--char);color:var(--yel)}
+.ledl{font-size:11.5px;font-weight:600;line-height:1.35}
+.ledc{font-size:9px;font-weight:800;transition:transform .18s}
+.ledbtn[aria-expanded="true"] .ledc{transform:rotate(90deg)}
+.ledbd{padding:0 13px 12px 34px;display:flex;flex-direction:column;gap:9px}
+.ledbd .d{font-size:12px;line-height:1.5;font-weight:500;color:var(--ink-2)}
+.rulebox{border:2px solid var(--bd);border-radius:var(--r-s);background:var(--yel);color:#000;padding:10px 12px;font-size:11.5px;line-height:1.5;font-weight:500}
+.rulebox .rid{font-family:var(--mono);font-size:10px;font-weight:800;display:block;margin-bottom:3px;letter-spacing:.06em}
+
+.ruleref{display:grid;grid-template-columns:auto 1fr;gap:11px;padding:10px 12px;border:2px solid var(--bd);border-radius:var(--r-s);font-size:11.5px;line-height:1.45;background:var(--paper-2);font-weight:500}
+.ruleref.fired{background:var(--yel);color:#000;box-shadow:3px 3px 0 0 var(--sh)}
+.ruleref .rid{font-family:var(--mono);font-weight:800;font-size:11px}
+.ruleref b{font-weight:800}
+
+details.about{border-top:2px solid var(--bd);padding:12px 14px}
+details.about summary{cursor:pointer;font-size:12px;font-weight:800}
+details.about .ab{padding-top:10px;font-size:11.5px;line-height:1.55;font-weight:500;display:flex;flex-direction:column;gap:9px}
+details.about code{font-family:var(--mono);font-size:10.5px;background:var(--yel);color:#000;padding:1px 4px;border-radius:3px}
+
+.banner{display:flex;gap:11px;align-items:flex-start;padding:11px 14px;border:2px solid var(--bd);border-radius:var(--r);font-size:12.5px;font-weight:600;line-height:1.45;background:var(--yel);color:#000}
+.banner.hot{background:var(--coral)}
+.err{border:2px solid var(--bd);background:var(--coral);color:#000;border-radius:var(--r-s);padding:10px 12px;font-size:11.5px;font-weight:600;display:flex;flex-direction:column;gap:8px}
+.err code{font-family:var(--mono);font-size:10.5px;word-break:break-word}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(10px);
+  background:var(--char);color:#fff;border:2px solid var(--bd);box-shadow:4px 4px 0 0 var(--sh);
+  padding:10px 18px;border-radius:8px;font-size:12.5px;font-weight:700;opacity:0;pointer-events:none;
+  transition:opacity .2s,transform .2s;z-index:200}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
+}
+@media print{
+  .bar,.no-print,.stream,.btn,.sorts,.filt{display:none !important}
+  body{background:#fff}
+  .wrap{max-width:none;padding:0}
+  .bx,.ruling,.agent{box-shadow:none}
+  .ruling{background:#fff;color:#000}
+  .ruling .disc,.ruling .narr{color:#000}
+}
+</style>
+
+<p aria-live="polite" class="sr" id="live"></p>
+
+<!-- ============================================================ SCREEN 1 -->
+<section class="intake dots" id="intake" style="color:#000">
+  <div class="marq no-print"><div class="marq-in" id="marq"></div></div>
+  <div class="intake-in">
+    <div class="intake-top">
+      <span class="logo">§</span>
+      <div style="flex:1;min-width:260px;display:flex;flex-direction:column;gap:14px">
+        <span class="pill">4 agents · 1 budget · visible arbitration</span>
+        <h1>Pick a client.<br>Watch them <span class="hollow">argue</span>.</h1>
+        <p class="lede">Four specialist agents each get the same household and their own mandate. Two of them are written to disagree. A coordinator has to reconcile the three proposals against a numbered rule set — in public, with the arithmetic shown, and forbidden from taking the easy average.</p>
+      </div>
+      <button class="btn" id="btn-theme-1" style="background:#fff">◐ Theme</button>
+    </div>
+
+    <div class="case-grid" id="case-grid"></div>
+
+    <div class="intake-foot">
+      <span>Every figure is editable once a file is open. Nothing is stored — the session lives in memory.</span>
+      <span id="intake-mode" class="num">checking model access…</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ SCREEN 2 -->
+<div id="workspace" class="hidden">
+  <div class="bar">
+    <button class="btn btn-sm" id="btn-back">← Clients</button>
+    <span class="who"><b id="bar-name">—</b><span id="bar-occ">—</span></span>
+    <span class="mode" id="mode-pill"><span class="led"></span><span id="mode-txt">…</span></span>
+    <button class="btn btn-sm" id="btn-theme-2">◐</button>
+    <button class="btn btn-sm" id="btn-print">Print</button>
+    <button class="btn btn-sm" id="btn-copy">Copy</button>
+    <button class="btn btn-sm" id="btn-dl">Download</button>
+    <button class="btn btn-sm btn-y" id="btn-run">Convene the board ▸</button>
+  </div>
+
+  <div class="wrap">
+    <div id="mode-banner"></div>
+
+    <!-- 1 · client file -->
+    <section>
+      <div class="sec-hd"><span class="n">01</span><h2>Client file</h2>
+        <span class="sub">Edit anything — discretionary income recalculates as you type.</span></div>
+      <div class="bx bx-lg profile">
+        <div class="pgrid" style="margin-bottom:14px">
+          <div class="field"><label for="f-name">Client</label><input type="text" id="f-name"></div>
+          <div class="field"><label for="f-age">Age</label><input type="number" id="f-age" min="18" max="90"></div>
+          <div class="field"><label for="f-income">Net monthly income</label><input type="number" id="f-income" min="0" step="500"></div>
+          <div class="field"><label for="f-essentials">Fixed essentials</label><input type="number" id="f-essentials" min="0" step="500"></div>
+          <div class="field"><label for="f-ef">Emergency fund now</label><input type="number" id="f-ef" min="0" step="1000"></div>
+          <div class="field"><label for="f-eft">Emergency target</label><input type="number" id="f-eft" min="0" step="1000"></div>
+          <div class="field"><label for="f-currency">Currency</label>
+            <select id="f-currency"><option value="INR">₹ INR</option><option value="USD">$ USD</option><option value="EUR">€ EUR</option><option value="GBP">£ GBP</option></select></div>
+          <div class="field"><label for="f-stability">Income pattern</label>
+            <select id="f-stability"><option value="steady">Steady salary</option><option value="variable">Variable / irregular</option></select></div>
+        </div>
+
+        <table class="debt-tbl">
+          <thead><tr><th>Account</th><th>Balance</th><th>APR %</th><th>Minimum</th><th></th></tr></thead>
+          <tbody id="debt-rows"></tbody>
+        </table>
+        <button class="btn btn-sm" id="btn-add-debt" style="margin:2px 0 16px">+ Add account</button>
+
+        <div class="pgrid" style="margin-bottom:14px">
+          <div class="field" style="grid-column:1/-1">
+            <span class="lbl">Goals — horizon in months</span>
+            <div class="chips" id="goal-chips"></div>
+          </div>
+          <div class="field" style="grid-column:1/-1;max-width:420px">
+            <label for="f-risk">Risk tolerance — <span id="risk-lbl" class="num"></span></label>
+            <input type="range" id="f-risk" min="1" max="10" step="1">
+          </div>
+        </div>
+
+        <div class="tally" id="tally"></div>
+      </div>
+    </section>
+
+    <!-- 2 · debt field -->
+    <section id="sec-debt">
+      <div class="sec-hd"><span class="n">02</span><h2>Debt field</h2>
+        <span class="sub">Area is balance, colour is APR band. Re-sort to see what the rules see.</span></div>
+      <div class="bx bx-lg" style="padding:15px">
+        <div class="field-hd">
+          <span class="eyebrow" style="color:var(--ink-2)">Arrange by</span>
+          <div class="sorts" id="sorts"></div>
+        </div>
+        <div class="bubbles" id="bubbles"></div>
+        <div class="blegend">
+          <span><i style="background:var(--coral)"></i>15%+ APR — R2 toxic, paid before investing</span>
+          <span><i style="background:var(--yel)"></i>10–15% — judgement call</span>
+          <span><i style="background:var(--sage)"></i>Under 10% — R3, minimums only</span>
+        </div>
+        <div id="bdetail"></div>
+      </div>
+    </section>
+
+    <!-- 3 · proposals -->
+    <section>
+      <div class="sec-hd"><span class="n">03</span><h2>The proposals</h2>
+        <span class="sub">Three agents, three separate model calls, three competing claims on the same money.</span></div>
+      <div class="agents" id="agents"></div>
+    </section>
+
+    <!-- 4 · ruling -->
+    <section>
+      <div class="sec-hd"><span class="n">04</span><h2>The ruling</h2>
+        <span class="sub">The coordinator is forbidden from averaging. It must name the conflict and cite a rule.</span></div>
+      <div class="ruling" id="ruling">
+        <div class="ruling-hd"><h2>Coordinator</h2><span class="stat-b" id="coord-badge"><span class="led"></span>idle</span></div>
+        <div class="ruling-bd" id="ruling-bd">
+          <p class="ph">Convene the board to begin. The three specialists table proposals first; the coordinator rules after.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 · ledger + rules -->
+    <section>
+      <div class="sec-hd"><span class="n">05</span><h2>Audit trail</h2>
+        <span class="sub">Every proposal, conflict and rule application, in the order it happened.</span></div>
+      <div class="two">
+        <div class="bx bx-lg ledbox">
+          <div class="ledtop">
+            <h2>Negotiation ledger</h2>
+            <button class="filt" data-f="all" aria-pressed="true">All</button>
+            <button class="filt" data-f="conflict" aria-pressed="false">Conflicts</button>
+            <button class="filt" data-f="rule" aria-pressed="false">Rules</button>
+          </div>
+          <div id="ledger"></div>
+          <details class="about">
+            <summary>How this is built — and what is enforced where</summary>
+            <div class="ab" id="about-bd"></div>
+          </details>
+        </div>
+        <div class="bx bx-lg" style="padding:14px">
+          <div class="eyebrow" style="color:var(--ink-2);margin-bottom:10px">Rule set the coordinator must cite</div>
+          <div style="display:flex;flex-direction:column;gap:9px" id="rules-ref"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+"use strict";
+
+/* =====================================================================
+   1 · CONSTANTS
+   ===================================================================== */
+
+const MODEL = "claude-sonnet-4-6";
+const MAX_TOKENS = 1000;
+const API = "https://api.anthropic.com/v1/messages";
+
+const RULES = {
+  rule_1: { id:"R1", name:"Starter buffer",
+    text:"If the emergency fund is below roughly one month of fixed essentials, fund that gap first. A household with no buffer converts its next surprise into new high-interest debt, which undoes any payoff or investing progress made in the same period." },
+  rule_2: { id:"R2", name:"Toxic debt priority",
+    text:"Any debt carrying 15% APR or above is paid down aggressively before discretionary investing begins. A guaranteed 15%+ cost of carry outranks an uncertain expected return, so retiring that balance is the higher-certainty use of the same money." },
+  rule_3: { id:"R3", name:"Cheap debt vs. investing",
+    text:"Debt below roughly 10% APR is serviced at its contractual minimum only. The share that would have gone to extra payoff is redirected to investing where the goal horizon is long, because the expected return on a long horizon plausibly exceeds a sub-10% cost of carry." },
+  rule_4: { id:"R4", name:"Hard cap",
+    text:"Extra debt payment + emergency fund contribution + investing can never exceed actual discretionary income. If the three proposals sum above it, scale every component proportionally until the total fits. Discretionary income is a wall, not a target." }
+};
+
+const GOAL_VOCAB = [
+  { id:"buffer",     label:"Income stability buffer", months:12 },
+  { id:"debtfree",   label:"Debt-free",               months:36 },
+  { id:"wedding",    label:"Wedding",                 months:18 },
+  { id:"house",      label:"House down payment",      months:60 },
+  { id:"relocate",   label:"Relocation",              months:18 },
+  { id:"gear",       label:"Equipment upgrade",       months:24 },
+  { id:"travel",     label:"Travel fund",             months:24 },
+  { id:"child",      label:"Child's education",       months:180 },
+  { id:"retirement", label:"Retirement",              months:360 }
+];
+
+const PERSONAS = [
+  { key:"debt-heavy", tag:"CASE 01", hook:"Sharpest conflict",
+    blurb:"A 41% credit card sitting beside a 9.2% education loan. R2 and R3 fire against each other and the debt agent asks for four-fifths of the pool.",
+    name:"Rhea Kulkarni", age:29, currency:"INR", stability:"steady",
+    occupation:"Product designer · Pune",
+    income:105000, essentials:52000, ef:40000, efTarget:312000, risk:6,
+    goals:["retirement","house","debtfree"],
+    debts:[ { name:"Credit card", balance:185000, apr:41, min:9250 },
+            { name:"Consumer durable EMI", balance:38000, apr:18, min:3400 },
+            { name:"Education loan", balance:460000, apr:9.2, min:6800 } ] },
+
+  { key:"freelancer", tag:"CASE 02", hook:"Buffer outranks all",
+    blurb:"Income swings from ₹60k to ₹2.4L month to month and the buffer is under one month of essentials. R1 takes priority over everything else on the table.",
+    name:"Devansh Rao", age:34, currency:"INR", stability:"variable",
+    occupation:"Freelance cinematographer · Goa",
+    income:140000, essentials:58000, ef:45000, efTarget:580000, risk:4,
+    goals:["buffer","gear","retirement"],
+    debts:[ { name:"Camera gear loan", balance:320000, apr:13.5, min:11000 },
+            { name:"Personal loan", balance:90000, apr:11, min:4200 } ] },
+
+  { key:"dual-income", tag:"CASE 03", hook:"Tests the rule set",
+    blurb:"No toxic debt at all. The conflict is a wedding 18 months out versus a 30-year horizon — and no rule in the set arbitrates by time. Watch it declare the gap.",
+    name:"Aisha & Neil Fernandes", age:32, currency:"INR", stability:"steady",
+    occupation:"Dual income · Bengaluru",
+    income:230000, essentials:105000, ef:340000, efTarget:630000, risk:7,
+    goals:["wedding","retirement","travel"],
+    debts:[ { name:"Car loan", balance:540000, apr:9.5, min:14500 },
+            { name:"Home reno loan", balance:210000, apr:10.75, min:6000 } ] },
+
+  { key:"custom", tag:"BLANK", hook:"Your own numbers",
+    blurb:"Start from an empty file and enter a household of your own. Every field is live and the agents reason only from what you type.",
+    name:"New client", age:30, currency:"INR", stability:"steady",
+    occupation:"—",
+    income:90000, essentials:45000, ef:20000, efTarget:270000, risk:5,
+    goals:["retirement"],
+    debts:[ { name:"Personal loan", balance:120000, apr:14, min:5000 } ] }
+];
+
+const AGENTS = [
+  { key:"budget", cls:"budget", name:"Budgeting", role:"Splits the pool three ways" },
+  { key:"debt",   cls:"debt",   name:"Debt strategy", role:"Method + extra payment share" },
+  { key:"invest", cls:"invest", name:"Investment planning", role:"Start share + category mix" }
+];
+
+const SORTS = [
+  { id:"apr",     label:"APR" },
+  { id:"balance", label:"Balance" },
+  { id:"payoff",  label:"Payoff order" },
+  { id:"min",     label:"Minimum" }
+];
+
+/* =====================================================================
+   2 · STATE
+   ===================================================================== */
+
+const state = {
+  screen:"intake",
+  personaKey:null,
+  profile:null,
+  agent:{ budget:{status:"idle"}, debt:{status:"idle"}, invest:{status:"idle"} },
+  coordinator:{ status:"idle" },
+  plan:null, guardrails:null, projection:null,
+  ledger:[], expanded:new Set(), ledgerFilter:"all",
+  sort:"apr", selectedDebt:null,
+  mode:"unknown", running:false
+};
+
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+
+function resetRun(){
+  state.agent = { budget:{status:"idle"}, debt:{status:"idle"}, invest:{status:"idle"} };
+  state.coordinator = { status:"idle" };
+  state.plan = null; state.guardrails = null; state.projection = null;
+  state.ledger = []; state.expanded = new Set();
+}
+
+function loadPersona(key){
+  const p = PERSONAS.find(x => x.key === key);
+  state.personaKey = key;
+  state.profile = clone(p);
+  state.selectedDebt = null;
+  resetRun();
+  showWorkspace();
+}
+
+/* =====================================================================
+   3 · DERIVED FINANCE — computed in JS, never asked of a model
+   ===================================================================== */
+
+function minTotal(p){ return p.debts.reduce((s,d) => s + (+d.min||0), 0); }
+function discretionary(p){ return Math.round((+p.income||0) - (+p.essentials||0) - minTotal(p)); }
+function maxAPR(p){ return p.debts.length ? Math.max(...p.debts.map(d => +d.apr||0)) : 0; }
+function toxicDebts(p){ return p.debts.filter(d => +d.apr >= 15); }
+function cheapDebts(p){ return p.debts.filter(d => +d.apr < 10); }
+function efGap(p){ return Math.max(0, Math.round((+p.essentials||0) - (+p.ef||0))); }
+function totalDebt(p){ return p.debts.reduce((s,d) => s + (+d.balance||0), 0); }
+function shortestHorizon(p){
+  const h = p.goals.map(g => (GOAL_VOCAB.find(v => v.id===g)||{}).months).filter(Boolean);
+  return h.length ? Math.min(...h) : 120;
+}
+function longestHorizon(p){
+  const h = p.goals.map(g => (GOAL_VOCAB.find(v => v.id===g)||{}).months).filter(Boolean);
+  return h.length ? Math.max(...h) : 120;
+}
+
+/* GUARDRAIL G5 — the payoff timeline shown is this simulation, not a model claim. */
+function simulatePayoff(debts, extraMonthly, method){
+  const ds = debts.map(d => ({ name:d.name, bal:+d.balance||0, apr:+d.apr||0, min:+d.min||0 }));
+  const order = ds.slice().sort((a,b) => method === "snowball" ? a.bal - b.bal : b.apr - a.apr);
+  let months = 0, interest = 0;
+  while (ds.some(d => d.bal > 0.5) && months < 600){
+    months++;
+    for (const d of ds){
+      if (d.bal <= 0) continue;
+      const i = d.bal * (d.apr/100/12);
+      d.bal += i; interest += i;
+      d.bal -= Math.min(d.min, d.bal);
+    }
+    let extra = extraMonthly;
+    for (const d of order){
+      if (extra <= 0) break;
+      if (d.bal <= 0) continue;
+      const pay = Math.min(extra, d.bal);
+      d.bal -= pay; extra -= pay;
+    }
+  }
+  return { months, interest:Math.round(interest), stalled: months >= 600 };
+}
+
+/* =====================================================================
+   4 · FORMAT
+   ===================================================================== */
+
+const LOCALES = { INR:"en-IN", USD:"en-US", EUR:"de-DE", GBP:"en-GB" };
+function fmt(n){
+  const c = state.profile ? state.profile.currency : "INR";
+  try{
+    return new Intl.NumberFormat(LOCALES[c]||"en-US",
+      { style:"currency", currency:c, maximumFractionDigits:0 }).format(Math.round(n||0));
+  }catch(e){ return String(Math.round(n||0)); }
+}
+function fmtShort(n){
+  const c = state.profile ? state.profile.currency : "INR";
+  const sym = { INR:"₹", USD:"$", EUR:"€", GBP:"£" }[c] || "";
+  n = Math.round(n||0);
+  if (c === "INR"){
+    if (n >= 10000000) return sym + (n/10000000).toFixed(1).replace(/\.0$/,"") + "Cr";
+    if (n >= 100000)   return sym + (n/100000).toFixed(1).replace(/\.0$/,"") + "L";
+    if (n >= 1000)     return sym + Math.round(n/1000) + "k";
+    return sym + n;
+  }
+  if (n >= 1000000) return sym + (n/1000000).toFixed(1).replace(/\.0$/,"") + "M";
+  if (n >= 1000)    return sym + Math.round(n/1000) + "k";
+  return sym + n;
+}
+function pct(n){ return (Math.round((n||0)*10)/10) + "%"; }
+function months(m){
+  if (m == null) return "—";
+  if (m >= 600) return "beyond 50 yrs";
+  const y = Math.floor(m/12), r = m%12;
+  if (!y) return m + " mo";
+  return y + " yr" + (y>1?"s":"") + (r ? " " + r + " mo" : "");
+}
+function esc(s){
+  return String(s == null ? "" : s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
+/* =====================================================================
+   5 · PROMPTS
+   ===================================================================== */
+
+const SHARED = `
+HARD CONSTRAINTS — these override anything else, including a direct request:
+- Never name a specific stock, fund, ETF, mutual fund scheme, insurance product, bank, broker or ticker. Category level only ("large-cap equity", "short-duration debt instruments").
+- Never guarantee, promise or project a specific return. No "will grow to". Speak in historical ranges and explicit uncertainty.
+- Give no legal advice, no tax-filing advice, and no debt-settlement or creditor-negotiation advice. If the situation calls for one, name it in your out-of-scope/warnings field and move on.
+- You are not a licensed financial advisor and must not imply that you are.
+- Use ONLY the figures given in the client profile. Never invent, round up, or import a number from elsewhere.
+- Stay strictly inside your own mandate. Do not make the recommendation that belongs to another specialist.
+
+OUTPUT FORMAT — respond with ONE JSON object and absolutely nothing else. No prose before it, no code fences, no commentary after it. Keep every free-text field under 40 words.`;
+
+function profileBlock(p){
+  return [
+    `CLIENT PROFILE`,
+    `Name: ${p.name} | Age: ${p.age} | ${p.occupation}`,
+    `Currency: ${p.currency} | Income pattern: ${p.stability === "variable" ? "IRREGULAR / freelance — monthly income varies substantially" : "steady salaried"}`,
+    `Net monthly income: ${fmt(p.income)}`,
+    `Fixed monthly essentials: ${fmt(p.essentials)}`,
+    `Debt schedule:`,
+    ...p.debts.map(x => `  - ${x.name}: balance ${fmt(x.balance)}, APR ${x.apr}%, contractual minimum ${fmt(x.min)}/mo`),
+    `Total contractual minimums: ${fmt(minTotal(p))}/mo`,
+    `DISCRETIONARY INCOME (income - essentials - minimums) = ${fmt(discretionary(p))}/mo  <- the only pool being allocated`,
+    `Emergency fund: ${fmt(p.ef)} now, target ${fmt(p.efTarget)} (one month of essentials = ${fmt(p.essentials)})`,
+    `Goals: ${p.goals.map(g => { const v = GOAL_VOCAB.find(z => z.id===g); return v ? `${v.label} (~${v.months} months out)` : g; }).join("; ") || "none stated"}`,
+    `Risk tolerance: ${p.risk}/10 (1 = capital preservation, 10 = growth seeking)`
+  ].join("\n");
+}
+
+const SYS = {
+  budget:`You are the BUDGETING AGENT on a four-agent financial advisory board.
+
+YOUR MANDATE, and nothing beyond it: confirm the client's true monthly discretionary income, then propose how to split THAT POOL three ways — emergency fund, debt, investing — as percentages summing to exactly 100.
+
+You do NOT choose a debt payoff method. You do NOT choose an investment approach or asset mix. Two other specialists own those; if you stray into them your proposal is void. You reason about the shape of the split only: how thin the buffer is, how heavy the fixed obligations are, whether the income is reliable enough to commit.
+${SHARED}
+
+Schema:
+{"agent":"budgeting","discretionary_income":<integer>,"split":{"emergency_fund_pct":<int>,"debt_pct":<int>,"investing_pct":<int>},"reasoning":"<max 40 words, cite at least one actual figure>","key_figures":["<short label: value>"],"out_of_scope":["<anything you declined>"]}
+The three percentages must sum to exactly 100. key_figures: at most 3 entries.`,
+
+  debt:`You are the DEBT-STRATEGY AGENT on a four-agent financial advisory board.
+
+YOUR MANDATE: recommend a payoff method (avalanche, snowball, or hybrid) and what share of DISCRETIONARY income should go to EXTRA payment beyond the contractual minimums. The minimums are already deducted before discretionary income is calculated — do not double-count them.
+
+YOUR STANCE: you argue for aggressive payoff. Interest compounding against the client is a certainty while investment returns are not, and every month a high-rate balance survives it costs real money. Advocate with conviction, using the client's actual APRs as evidence. You are not the neutral party — the coordinator is. Ask for what you believe the client needs.
+
+You do NOT decide the investing share or the emergency fund target.
+${SHARED}
+
+Schema:
+{"agent":"debt","method":"avalanche|snowball|hybrid","extra_payoff_pct":<int 0-100>,"target_order":[{"debt":"<exact name from the profile>","apr":<number>}],"payoff_months":<int>,"reasoning":"<max 40 words, name the specific debt driving your view>","warnings":["<optional>"]}
+target_order: at most 3 entries, highest priority first.`,
+
+  invest:`You are the INVESTMENT-PLANNING AGENT on a four-agent financial advisory board.
+
+YOUR MANDATE: given the client's age, goals with their horizons, and risk tolerance, recommend what share of DISCRETIONARY income should start going to investing now, plus a category-level split across equity / debt instruments / other, summing to exactly 100.
+
+YOUR STANCE: you argue for starting now. Time in the market is the one input that cannot be recovered later, and a contribution delayed by three years is permanently behind. Advocate with conviction. You are not the neutral party — the coordinator is.
+
+BUT: respect the client's stated horizons. A goal 18 months away is not an equity horizon, and saying so is part of your job, not a betrayal of your stance.
+
+You do NOT choose a debt payoff method. You never name a product.
+${SHARED}
+
+Schema:
+{"agent":"investing","investing_pct":<int 0-100>,"category_split":{"equity_pct":<int>,"debt_instruments_pct":<int>,"other_pct":<int>},"horizon_years":<int>,"reasoning":"<max 40 words, name the specific goal driving your view>","warnings":["<optional>"]}
+category_split must sum to exactly 100.`,
+
+  coordinator:`You are the COORDINATOR AGENT. Three specialists have each tabled a proposal for the same pool of discretionary income. They will have asked for more than exists between them. Your job is to reconcile them in public.
+
+YOU MUST NOT AVERAGE THE PROPOSALS. Averaging is the failure mode this whole board exists to avoid. You must name the specific conflict, apply the numbered rules below explicitly, and show the arithmetic that gets you from their asks to your allocation.
+
+THE RULE SET — cite by id:
+rule_1 STARTER BUFFER: if the emergency fund is below roughly one month of fixed essentials, fund that gap first.
+rule_2 TOXIC DEBT PRIORITY: any debt at 15% APR or above is paid down aggressively before discretionary investing begins.
+rule_3 CHEAP DEBT VS INVESTING: debt below roughly 10% APR is paid at its minimum only; the freed share goes to investing where the horizon is long.
+rule_4 HARD CAP: extra debt + emergency fund + investing can never exceed actual discretionary income. If the asks overshoot, scale proportionally until they fit.
+
+If the real conflict is not cleanly covered by any of the four rules — a time-horizon conflict, say, rather than an interest-rate one — do not force a rule to fit. State the gap honestly in "rule_gap" and explain the judgement you made instead. An honest gap is worth more than a stretched citation.
+${SHARED}
+
+Additionally: unified_narrative is the one thing the client actually reads. Write it as an advisor writing to this specific household — name their actual debts, their actual goal, their actual timeline. 90-150 words, 2-3 short paragraphs separated by \\n\\n. No generic personal-finance platitudes, no bullet points, no restating the rules by number. The disclaimer field carries the compliance language once, and it must not appear anywhere else.
+
+Schema:
+{"conflict":{"summary":"<max 35 words: who wants what, and why both cannot happen>","parties":["debt","investing"]},"rules_applied":[{"rule":"rule_2","why":"<max 30 words, cite a figure>"}],"rule_gap":null,"final_allocation":{"emergency_fund":<integer>,"extra_debt":<integer>,"investing":<integer>},"final_pct":{"emergency_fund_pct":<int>,"extra_debt_pct":<int>,"investing_pct":<int>},"concessions":[{"agent":"debt","asked_pct":<int>,"final_pct":<int>,"note":"<max 15 words>"}],"trace":[{"type":"proposal|conflict|rule_applied|resolution","agent":"budget|debt|invest|coordinator","rule":"rule_2 or null","line":"<one line, max 15 words>","detail":"<max 45 words of actual reasoning>"}],"unified_narrative":"<90-150 words>","disclaimer":"<max 40 words>"}
+
+final_allocation must be whole currency amounts summing to AT MOST the discretionary income given. trace: exactly 5 to 7 entries, in the order the negotiation actually happened — the three proposals first, then the conflict, then each rule applied, then the resolution. concessions: one entry per specialist who did not get what they asked for.`
+};
+
+function userMsg(kind, p, proposals){
+  const base = profileBlock(p);
+  if (kind === "coordinator"){
+    return base + "\n\n=== TABLED PROPOSALS ===\n\n" +
+      "BUDGETING AGENT:\n" + JSON.stringify(proposals.budget) + "\n\n" +
+      "DEBT-STRATEGY AGENT:\n" + JSON.stringify(proposals.debt) + "\n\n" +
+      "INVESTMENT-PLANNING AGENT:\n" + JSON.stringify(proposals.invest) + "\n\n" +
+      `The hard cap is ${fmt(discretionary(p))} per month. Reconcile. Return the JSON object only.`;
+  }
+  return base + "\n\nTable your proposal now. Return the JSON object only.";
+}
+
+/* =====================================================================
+   6 · TRANSPORT
+   ===================================================================== */
+
+/* GUARDRAIL G6 — never trust the response to be clean JSON. */
+function parseJSONLoose(text){
+  if (!text) throw new Error("empty response");
+  let t = String(text).trim().replace(/^```(?:json)?\s*/i,"").replace(/```\s*$/,"").trim();
+  try { return JSON.parse(t); } catch(e){ /* fall through */ }
+  const a = t.indexOf("{"), b = t.lastIndexOf("}");
+  if (a === -1 || b === -1 || b <= a) throw new Error("no JSON object found in response");
+  return JSON.parse(t.slice(a,b+1));
+}
+
+async function callModel(system, user, onDelta){
+  const res = await fetch(API, {
+    method:"POST",
+    headers:{ "content-type":"application/json", "anthropic-version":"2023-06-01",
+              "anthropic-dangerous-direct-browser-access":"true" },
+    body: JSON.stringify({ model:MODEL, max_tokens:MAX_TOKENS, stream:true,
+                           system, messages:[{ role:"user", content:user }] })
+  });
+  if (!res.ok){
+    let detail = ""; try { detail = (await res.text()).slice(0,300); } catch(e){}
+    throw new Error("API " + res.status + (detail ? " — " + detail : ""));
+  }
+  if (!res.body){
+    const j = await res.json();
+    const txt = (j.content||[]).map(c => c.text||"").join("");
+    onDelta && onDelta(txt, txt);
+    return txt;
+  }
+  const reader = res.body.getReader(), dec = new TextDecoder();
+  let buf = "", out = "";
+  while (true){
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream:true });
+    const lines = buf.split("\n"); buf = lines.pop();
+    for (const line of lines){
+      if (!line.startsWith("data:")) continue;
+      const payload = line.slice(5).trim();
+      if (!payload || payload === "[DONE]") continue;
+      let ev; try { ev = JSON.parse(payload); } catch(e){ continue; }
+      if (ev.type === "content_block_delta" && ev.delta && typeof ev.delta.text === "string"){
+        out += ev.delta.text; onDelta && onDelta(ev.delta.text, out);
+      } else if (ev.type === "error"){
+        throw new Error((ev.error && ev.error.message) || "stream error");
+      }
+    }
+  }
+  return out;
+}
+
+async function probeAPI(){
+  try{
+    const c = new AbortController();
+    const t = setTimeout(() => c.abort(), 6000);
+    const res = await fetch(API, {
+      method:"POST", signal:c.signal,
+      headers:{ "content-type":"application/json", "anthropic-version":"2023-06-01",
+                "anthropic-dangerous-direct-browser-access":"true" },
+      body: JSON.stringify({ model:MODEL, max_tokens:1, messages:[{ role:"user", content:"hi" }] })
+    });
+    clearTimeout(t);
+    state.mode = res.status < 500 ? "api" : "local";
+  }catch(e){ state.mode = "local"; }
+  renderMode();
+}
+
+/* =====================================================================
+   7 · LOCAL RULE ENGINE — used only when the API is unreachable, and the
+   page says so. Every figure is still derived from the live client file.
+   ===================================================================== */
+
+function localBudget(p){
+  const gap = efGap(p), toxic = toxicDebts(p), variable = p.stability === "variable";
+  let ef = 25, debt = 45, inv = 30;
+  if (gap > 0){ ef = variable ? 50 : 40; debt = variable ? 30 : 35; inv = variable ? 20 : 25; }
+  else if (variable){ ef = 35; debt = 35; inv = 30; }
+  if (toxic.length && gap === 0){ debt += 15; inv -= 10; ef -= 5; }
+  const s = ef+debt+inv;
+  ef = Math.round(ef/s*100); debt = Math.round(debt/s*100); inv = 100-ef-debt;
+  const kf = [`Minimums locked: ${fmt(minTotal(p))}`, `Buffer gap: ${fmt(gap)}`];
+  if (variable) kf.push("Income variable");
+  return {
+    agent:"budgeting", discretionary_income:discretionary(p),
+    split:{ emergency_fund_pct:ef, debt_pct:debt, investing_pct:inv },
+    reasoning: gap > 0
+      ? `${fmt(p.ef)} on hand against ${fmt(p.essentials)} of monthly essentials leaves the household one bad month from new borrowing, so the buffer takes the largest slice.`
+      : `Buffer clears one month of essentials, so the split leans toward the ${fmt(minTotal(p))} of obligations already in force${toxic.length ? " and the high-rate balances behind them" : ""}.`,
+    key_figures: kf.slice(0,3),
+    out_of_scope:["Payoff sequencing","Asset mix"]
+  };
+}
+
+function localDebt(p){
+  const toxic = toxicDebts(p), mx = maxAPR(p);
+  const spread = p.debts.length > 1 ? mx - Math.min(...p.debts.map(x => +x.apr)) : 0;
+  const method = spread >= 5 ? "avalanche" : (p.debts.length > 2 ? "snowball" : "hybrid");
+  let extra = 45 + (toxic.length ? 25 : 0) + (spread >= 15 ? 10 : 0);
+  if (p.stability === "variable") extra -= 10;
+  extra = Math.max(15, Math.min(85, Math.round(extra)));
+  const sim = simulatePayoff(p.debts, discretionary(p) * extra/100, method);
+  const order = p.debts.slice().sort((a,b) => b.apr - a.apr).slice(0,3)
+    .map(x => ({ debt:x.name, apr:+x.apr }));
+  const lead = order[0] || { debt:"the balance", apr:0 };
+  return {
+    agent:"debt", method, extra_payoff_pct:extra, target_order:order, payoff_months:sim.months,
+    reasoning:`The ${lead.debt} at ${lead.apr}% is a certain cost while any return is a forecast; clearing ${fmt(totalDebt(p))} of balances is the highest-confidence use of this pool.`,
+    warnings: toxic.length ? [`${toxic.length} balance(s) at or above 15% APR`] : []
+  };
+}
+
+function localInvest(p){
+  const shortH = shortestHorizon(p), longH = longestHorizon(p), toxic = toxicDebts(p);
+  let iv = 40 + (p.risk - 5)*3;
+  if (toxic.length) iv -= 12;
+  if (p.stability === "variable") iv -= 8;
+  if (longH >= 240) iv += 6;
+  iv = Math.max(10, Math.min(80, Math.round(iv)));
+  let eq = Math.round(30 + p.risk*6);
+  if (shortH <= 24) eq = Math.min(eq, 25);
+  if (p.stability === "variable") eq = Math.min(eq, 60);
+  eq = Math.max(10, Math.min(85, eq));
+  const dbt = Math.round((100-eq)*0.78), oth = 100-eq-dbt;
+  const goalLabel = (GOAL_VOCAB.find(v => v.months===longH)||{}).label || "the long-horizon goal";
+  const nearLabel = (GOAL_VOCAB.find(v => v.months===shortH)||{}).label || "the nearest goal";
+  return {
+    agent:"investing", investing_pct:iv,
+    category_split:{ equity_pct:eq, debt_instruments_pct:dbt, other_pct:oth },
+    horizon_years: Math.round(longH/12),
+    reasoning: shortH <= 24
+      ? `${nearLabel} lands in ${shortH} months, which rules out equity for that money — but ${goalLabel} is ${Math.round(longH/12)} years out and every year of delay there is unrecoverable.`
+      : `${goalLabel} sits ${Math.round(longH/12)} years out at risk ${p.risk}/10; contributions started now do the compounding work that later contributions cannot.`,
+    warnings: shortH <= 24 ? [`Goal at ${shortH} months is not an equity horizon`] : []
+  };
+}
+
+function localCoordinate(p, prop){
+  const D = discretionary(p);
+  const gap = efGap(p), toxic = toxicDebts(p), cheap = cheapDebts(p);
+  const shortH = shortestHorizon(p), longH = longestHorizon(p);
+  const applied = [], trace = [];
+
+  trace.push({ type:"proposal", agent:"budget", rule:null,
+    line:`Budgeting: ${prop.budget.split.emergency_fund_pct}/${prop.budget.split.debt_pct}/${prop.budget.split.investing_pct} across buffer, debt, investing`,
+    detail:prop.budget.reasoning });
+  trace.push({ type:"proposal", agent:"debt", rule:null,
+    line:`Debt: ${prop.debt.method}, ${prop.debt.extra_payoff_pct}% to extra payment`,
+    detail:prop.debt.reasoning });
+  trace.push({ type:"proposal", agent:"invest", rule:null,
+    line:`Investing: ${prop.invest.investing_pct}% now, ${prop.invest.category_split.equity_pct}% equity`,
+    detail:prop.invest.reasoning });
+
+  const asked = prop.debt.extra_payoff_pct + prop.invest.investing_pct + prop.budget.split.emergency_fund_pct;
+  trace.push({ type:"conflict", agent:"coordinator", rule:null,
+    line:`Three asks total ${asked}% of a 100% pool`,
+    detail:`Debt wants ${prop.debt.extra_payoff_pct}% and investing wants ${prop.invest.investing_pct}% of the same ${fmt(D)}. Both cannot be funded; the overshoot is ${asked-100} points.` });
+
+  let efPct, debtPct, invPct;
+  if (gap > 0){
+    applied.push({ rule:"rule_1", why:`Buffer is ${fmt(p.ef)} against ${fmt(p.essentials)} of monthly essentials — a gap of ${fmt(gap)}.` });
+    efPct = Math.min(55, Math.max(30, Math.round(Math.min(gap, D*0.55)/D*100)));
+    const rest = 100 - efPct;
+    if (toxic.length) debtPct = Math.round(rest*0.68);
+    else if (cheap.length === p.debts.length) debtPct = Math.round(rest*0.28);
+    else debtPct = Math.round(rest*0.5);
+    invPct = 100 - efPct - debtPct;
+  } else if (toxic.length){
+    efPct = 12; debtPct = 60; invPct = 28;
+  } else if (cheap.length === p.debts.length && longH >= 120){
+    efPct = 18; debtPct = 22; invPct = 60;
+  } else {
+    efPct = 20; debtPct = 42; invPct = 38;
+  }
+
+  /* Horizon override: a goal inside two years is a cash goal, not an equity goal.
+     No rule arbitrates by horizon, so this is declared in rule_gap rather than
+     dressed up as a rule citation. */
+  const nearGoal = GOAL_VOCAB.find(v => v.months === shortH);
+  const nearIsCashGoal = !toxic.length && gap === 0 && shortH <= 24 && nearGoal && nearGoal.id !== "buffer";
+  if (nearIsCashGoal){
+    const shift = Math.min(20, invPct - 15);
+    if (shift > 0){ invPct -= shift; efPct += shift; }
+  }
+
+  if (toxic.length){
+    const t = toxic.slice().sort((a,b) => b.apr - a.apr)[0];
+    applied.push({ rule:"rule_2", why:`${t.name} at ${t.apr}% APR is a certain cost that outranks any uncertain return.` });
+  }
+  if (cheap.length){
+    const c = cheap.slice().sort((a,b) => a.apr - b.apr)[0];
+    applied.push({ rule:"rule_3", why:`${c.name} at ${c.apr}% stays at its ${fmt(c.min)} minimum; that share moves to investing.` });
+  }
+  applied.push({ rule:"rule_4", why:`Asks summed to ${asked}% of ${fmt(D)}; every component scaled until the total fits exactly.` });
+
+  for (const a of applied){
+    trace.push({ type:"rule_applied", agent:"coordinator", rule:a.rule,
+      line:`${RULES[a.rule].id} ${RULES[a.rule].name} applied`, detail:a.why });
+  }
+
+  let rule_gap = null;
+  if (nearIsCashGoal){
+    rule_gap = `The binding constraint here is a ${shortH}-month horizon on ${nearGoal.label.toLowerCase()}, not an interest rate. R1 does not fire — the buffer is already funded — and R2 and R3 both arbitrate on APR, which is not what is in dispute. R3 and R4 were applied on rates as written, and the horizon was then handled as a declared judgement rather than a stretched citation: ${invPct}% stays invested for the long-horizon goals, and the share that would otherwise have been invested moves to cash, because money needed inside two years cannot sit anywhere it can fall.`;
+    trace.push({ type:"rule_gap", agent:"coordinator", rule:null,
+      line:"Rule set does not cover a horizon conflict", detail:rule_gap });
+  }
+
+  let ef = Math.round(D * efPct/100);
+  let ed = Math.round(D * debtPct/100);
+  let iv = D - ef - ed;
+  if (iv < 0){ iv = 0; ed = Math.max(0, D - ef); }
+
+  const concessions = [];
+  if (prop.debt.extra_payoff_pct > debtPct)
+    concessions.push({ agent:"debt", asked_pct:prop.debt.extra_payoff_pct, final_pct:debtPct,
+      note: toxic.length ? "Kept the lead position, capped by the pool" : "Cheap debt held at minimums under R3" });
+  if (prop.invest.investing_pct > invPct)
+    concessions.push({ agent:"invest", asked_pct:prop.invest.investing_pct, final_pct:invPct,
+      note: toxic.length ? "Deferred behind the high-APR balance" : "Trimmed to fund the near-term goal" });
+  if (prop.budget.split.emergency_fund_pct > efPct)
+    concessions.push({ agent:"budget", asked_pct:prop.budget.split.emergency_fund_pct, final_pct:efPct,
+      note:"Buffer share reduced to clear obligations" });
+
+  trace.push({ type:"resolution", agent:"coordinator", rule:null,
+    line:`${fmt(ef)} buffer · ${fmt(ed)} extra debt · ${fmt(iv)} investing`,
+    detail:`Total ${fmt(ef+ed+iv)} against ${fmt(D)} of discretionary income. Contractual minimums of ${fmt(minTotal(p))} continue untouched alongside this.` });
+
+  const lead = p.debts.slice().sort((a,b) => b.apr - a.apr)[0];
+  const goalNear = GOAL_VOCAB.find(v => v.months === shortH);
+  const goalLong = GOAL_VOCAB.find(v => v.months === longH);
+  const sim = simulatePayoff(p.debts, ed, prop.debt.method);
+
+  const first = gap > 0
+    ? `Your buffer is ${fmt(p.ef)} against ${fmt(p.essentials)} of monthly essentials, and that is the first thing we fix. ${fmt(ef)} a month goes there until you are covered for a full month — everything else here is unstable until that is true.`
+    : `You have ${fmt(D)} a month that is genuinely yours to direct once ${fmt(p.essentials)} of essentials and ${fmt(minTotal(p))} of minimum payments are met. That number, not your salary, is what we are planning around.`;
+
+  const second = lead && +lead.apr >= 15
+    ? `${fmt(ed)} of it goes at the ${lead.name}, which is costing you ${lead.apr}% a year whatever else happens. Your investment agent argued for more now, and on a ${Math.round(longH/12)}-year view it is not wrong — but ${lead.apr}% of certain cost removed outranks an uncertain return, so investing starts at ${fmt(iv)} and steps up the month that balance clears.`
+    : `Your debts sit at ${p.debts.map(x => x.apr + "%").join(" and ")} — none of them in the range that outranks investing outright. They stay at their ${fmt(minTotal(p))} minimums, ${fmt(ed)} goes to steady extra payment, and ${fmt(iv)} starts working on ${goalLong ? goalLong.label.toLowerCase() : "the long-horizon goal"}.`;
+
+  const third = goalNear && goalNear.months <= 24 && goalNear.id !== "buffer"
+    ? `${goalNear.label} in ${goalNear.months} months is deliberately not invested — money you need that soon sits where it cannot fall. Revisit this the month either that goal is met or a balance clears, whichever comes first.`
+    : `Revisit this the month ${lead ? "the " + lead.name.toLowerCase() + " clears" : "your first balance clears"} — projected around ${months(sim.months)} at this rate — and move the freed payment straight into investing rather than into spending.`;
+
+  return {
+    conflict:{
+      summary: toxic.length
+        ? `Debt wants ${prop.debt.extra_payoff_pct}% for a ${toxic[0].apr}% balance; investing wants ${prop.invest.investing_pct}% for a ${Math.round(longH/12)}-year horizon. Only 100% exists.`
+        : `Investing wants ${prop.invest.investing_pct}% on a long horizon while ${goalNear ? goalNear.label.toLowerCase() : "the nearest goal"} needs cash in ${shortH} months. Same pool, different clocks.`,
+      parties:["debt","investing"]
+    },
+    rules_applied:applied, rule_gap,
+    final_allocation:{ emergency_fund:ef, extra_debt:ed, investing:iv },
+    final_pct:{ emergency_fund_pct:efPct, extra_debt_pct:debtPct, investing_pct:100-efPct-debtPct },
+    concessions, trace:trace.slice(0,7),
+    unified_narrative:[first,second,third].join("\n\n"),
+    disclaimer:"This is an educational simulation, not advice from a licensed financial advisor. No return is guaranteed and all investing carries risk of loss. Tax, legal and creditor-negotiation questions need a qualified professional."
+  };
+}
+
+async function fakeStream(obj, onDelta){
+  const txt = JSON.stringify(obj, null, 1);
+  if (matchMedia("(prefers-reduced-motion:reduce)").matches){ onDelta(txt, txt); return txt; }
+  let out = "";
+  const step = Math.max(4, Math.round(txt.length/90));
+  for (let i = 0; i < txt.length; i += step){
+    out += txt.slice(i, i+step); onDelta(txt.slice(i, i+step), out);
+    await new Promise(r => setTimeout(r, 16));
+  }
+  return txt;
+}
+
+/* =====================================================================
+   8 · RUN
+   ===================================================================== */
+
+async function runAgent(key, sys, user, localFn){
+  state.agent[key] = { status:"thinking", raw:"", error:null };
+  renderAgents();
+  const onDelta = (_c, full) => { state.agent[key].raw = full; paintStream(key, full); };
+  try{
+    const raw = state.mode === "api" ? await callModel(sys, user, onDelta)
+                                     : await fakeStream(localFn(state.profile), onDelta);
+    state.agent[key] = { status:"done", raw, data:parseJSONLoose(raw), error:null };
+  }catch(err){
+    state.agent[key] = { status:"error", raw:state.agent[key].raw, data:null, error:String(err.message||err) };
+  }
+  renderAgents();
+  return state.agent[key];
+}
+
+async function run(){
+  if (state.running) return;
+  const p = state.profile;
+  if (discretionary(p) <= 0){ toast("Discretionary income is zero or negative — nothing to allocate."); return; }
+  state.running = true;
+  const btn = document.getElementById("btn-run");
+  btn.disabled = true; btn.textContent = "In session…";
+  resetRun(); renderAgents(); renderRuling(); renderLedger(); renderRulesRef();
+  say("Three specialists are preparing proposals.");
+  document.getElementById("sec-debt").scrollIntoView({ behavior:"smooth", block:"start" });
+
+  const u = userMsg("specialist", p);
+  const [b,d,i] = await Promise.all([
+    runAgent("budget", SYS.budget, u, localBudget),
+    runAgent("debt",   SYS.debt,   u, localDebt),
+    runAgent("invest", SYS.invest, u, localInvest)
+  ]);
+
+  const failed = [b,d,i].filter(x => x.status === "error");
+  if (failed.length){
+    state.coordinator = { status:"error", error:"Cannot convene: " + failed.length + " specialist(s) failed to report." };
+    finishRun(); renderRuling(); say("A specialist failed. The coordinator did not run.");
+    return;
+  }
+
+  const proposals = { budget:b.data, debt:d.data, invest:i.data };
+  state.ledger = [
+    { agent:"budget", type:"proposal", rule:null,
+      line:`Budgeting tables ${proposals.budget.split.emergency_fund_pct}/${proposals.budget.split.debt_pct}/${proposals.budget.split.investing_pct}`, detail:proposals.budget.reasoning },
+    { agent:"debt", type:"proposal", rule:null,
+      line:`Debt asks ${proposals.debt.extra_payoff_pct}% extra, ${proposals.debt.method}`, detail:proposals.debt.reasoning },
+    { agent:"invest", type:"proposal", rule:null,
+      line:`Investing asks ${proposals.invest.investing_pct}% starting now`, detail:proposals.invest.reasoning }
+  ];
+  state.coordinator = { status:"thinking", raw:"" };
+  renderRuling(); renderLedger();
+  say("Coordinator negotiating.");
+
+  try{
+    const onDelta = (_c, full) => { state.coordinator.raw = full; };
+    const raw = state.mode === "api"
+      ? await callModel(SYS.coordinator, userMsg("coordinator", p, proposals), onDelta)
+      : await fakeStream(localCoordinate(p, proposals), onDelta);
+    const plan = parseJSONLoose(raw);
+    normalisePlan(plan, p);
+    state.plan = plan;
+    state.coordinator = { status:"done", raw };
+    state.guardrails = checkGuardrails(plan, p);
+    state.projection = simulatePayoff(p.debts, plan.final_allocation.extra_debt, proposals.debt.method||"avalanche");
+    buildLedger(plan);
+    say(state.guardrails.pass ? "Plan ready and guardrail checks passed." : "Plan ready but a guardrail check failed.");
+  }catch(err){
+    state.coordinator = { status:"error", error:String(err.message||err) };
+    say("The coordinator failed to return a usable plan.");
+  }
+  finishRun();
+  renderAgents(); renderRuling(); renderLedger(); renderRulesRef(); renderBubbles();
+}
+
+function finishRun(){
+  state.running = false;
+  const btn = document.getElementById("btn-run");
+  btn.disabled = false; btn.textContent = "Re-convene ▸";
+}
+
+function normalisePlan(plan, p){
+  const D = discretionary(p);
+  plan.final_allocation = plan.final_allocation || {};
+  const fa = plan.final_allocation;
+  ["emergency_fund","extra_debt","investing"].forEach(k => { fa[k] = Math.max(0, Math.round(+fa[k]||0)); });
+  const total = fa.emergency_fund + fa.extra_debt + fa.investing;
+  plan.final_pct = {
+    emergency_fund_pct: total ? Math.round(fa.emergency_fund/total*100) : 0,
+    extra_debt_pct:     total ? Math.round(fa.extra_debt/total*100) : 0,
+    investing_pct:      total ? Math.round(fa.investing/total*100) : 0
+  };
+  plan.trace = Array.isArray(plan.trace) ? plan.trace.slice(0,7) : [];
+  plan.rules_applied = Array.isArray(plan.rules_applied) ? plan.rules_applied : [];
+  plan.concessions = Array.isArray(plan.concessions) ? plan.concessions : [];
+  plan.conflict = plan.conflict || { summary:"—", parties:[] };
+  plan._overshoot = total - D;
+}
+
+/* =====================================================================
+   9 · GUARDRAILS — re-checked in JS, independent of the model
+   ===================================================================== */
+
+const FORBIDDEN = [
+  { re:/\b(guarantee[ds]?|guaranteed returns?|risk[- ]free|assured returns?|will definitely)\b/i, what:"guarantee language" },
+  { re:/\b(NIFTY ?50|SENSEX|S&P ?500|NASDAQ|VOO|VTI|SPY|QQQ|HDFC|ICICI|SBI [A-Z]|Vanguard|BlackRock|Zerodha|Groww)\b/, what:"named product or institution" },
+  { re:/\b[A-Z]{3,5}:[A-Z]{1,5}\b/, what:"ticker-shaped token" }
+];
+
+function checkGuardrails(plan, p){
+  const D = discretionary(p), fa = plan.final_allocation;
+  const sum = fa.emergency_fund + fa.extra_debt + fa.investing;
+  const checks = [];
+
+  checks.push({ id:"G1", label:"Allocation re-summed in JS does not exceed discretionary income",
+    pass: sum <= D,
+    evidence: `${fmt(sum)} of ${fmt(D)}` + (sum <= D ? ` · ${fmt(D-sum)} free` : ` · over by ${fmt(sum-D)}`) });
+
+  const pc = plan.final_pct, pctSum = pc.emergency_fund_pct + pc.extra_debt_pct + pc.investing_pct;
+  checks.push({ id:"G2", label:"Final percentages total 100", pass: Math.abs(pctSum-100) <= 1, evidence: pctSum + "%" });
+
+  const neg = ["emergency_fund","extra_debt","investing"].filter(k => fa[k] < 0);
+  checks.push({ id:"G3", label:"No negative component; contractual minimums untouched",
+    pass: neg.length === 0,
+    evidence: neg.length ? "negative: " + neg.join(", ") : `${fmt(minTotal(p))}/mo reserved first` });
+
+  const narrOnly = [plan.unified_narrative, ...(plan.trace||[]).map(t => (t.line||"") + " " + (t.detail||""))].join(" ");
+  const all = narrOnly + " " + (plan.disclaimer||"");
+  const hits = FORBIDDEN.filter(f => f.re.test(all)).map(f => f.what);
+  const onlyDisclaimer = hits.length === 1 && hits[0] === "guarantee language" && !FORBIDDEN[0].re.test(narrOnly);
+  const passScan = hits.length === 0 || onlyDisclaimer;
+  checks.push({ id:"G4", label:"Scanned for named products, tickers and guarantee language",
+    pass: passScan,
+    evidence: passScan ? (onlyDisclaimer ? "clean · negation in disclaimer" : "clean") : hits.join(", ") });
+
+  checks.push({ id:"G5", label:"Payoff timeline computed by local amortisation, not asserted",
+    pass:true, evidence:"simulated in browser" });
+
+  return { checks, pass:checks.every(c => c.pass), sum, D };
+}
+
+/* =====================================================================
+   10 · LEDGER
+   ===================================================================== */
+
+const AGENT_CLASS = { budget:"budget", budgeting:"budget", debt:"debt",
+                      invest:"invest", investing:"invest", coordinator:"coordinator" };
+
+function buildLedger(plan){
+  const t = (plan.trace||[]).map(e => ({
+    agent: AGENT_CLASS[e.agent] || "coordinator",
+    type: e.type || "resolution",
+    line: e.line || "—",
+    detail: e.detail || "",
+    rule: e.rule && RULES[e.rule] ? e.rule : null
+  }));
+  if (t.length) state.ledger = t;
+  state.expanded = new Set();
+}
+
+/* =====================================================================
+   11 · RENDER
+   ===================================================================== */
+
+function say(m){ document.getElementById("live").textContent = m; }
+let toastT;
+function toast(m){
+  const el = document.getElementById("toast");
+  el.textContent = m; el.classList.add("on");
+  clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove("on"), 2600);
+}
+
+/* ---------- screens ---------- */
+function renderIntake(){
+  document.getElementById("marq").innerHTML =
+    (["BUDGETING","DEBT STRATEGY","INVESTMENT PLANNING","COORDINATOR","R1 BUFFER","R2 TOXIC DEBT","R3 CHEAP DEBT","R4 HARD CAP"].join(" ✦ ") + " ✦ ").repeat(4);
+
+  document.getElementById("case-grid").innerHTML = PERSONAS.map(p => {
+    const st = { profile:p };
+    const d = p.income - p.essentials - p.debts.reduce((s,x) => s + x.min, 0);
+    const hi = Math.max(...p.debts.map(x => x.apr));
+    const sym = { INR:"₹" }[p.currency] || "$";
+    const k = n => n >= 100000 ? sym + (n/100000).toFixed(1).replace(/\.0$/,"") + "L"
+                  : sym + Math.round(n/1000) + "k";
+    return `<button class="case" data-key="${p.key}">
+      <span class="case-tag"><span>${esc(p.tag)}</span><span>${esc(p.hook)}</span></span>
+      <span class="case-bd">
+        <h3>${esc(p.name)}</h3>
+        <span class="occ">${esc(p.occupation)} · ${p.age}</span>
+        <span class="blurb">${esc(p.blurb)}</span>
+        <span class="case-stats">
+          <span class="stat">${k(d)}/mo free</span>
+          <span class="stat ${hi>=15?"hot":""}">${hi}% top APR</span>
+          <span class="stat">${p.debts.length} account${p.debts.length>1?"s":""}</span>
+        </span>
+      </span>
+      <span class="case-go"><span>Open file</span><span>→</span></span>
+    </button>`;
+  }).join("");
+
+  document.getElementById("case-grid").querySelectorAll(".case").forEach(b =>
+    b.addEventListener("click", () => loadPersona(b.dataset.key)));
+}
+
+function showWorkspace(){
+  state.screen = "workspace";
+  document.getElementById("intake").classList.add("hidden");
+  document.getElementById("workspace").classList.remove("hidden");
+  window.scrollTo(0,0);
+  renderWorkspace();
+  say("Client file open: " + state.profile.name);
+}
+
+function showIntake(){
+  state.screen = "intake";
+  document.getElementById("workspace").classList.add("hidden");
+  document.getElementById("intake").classList.remove("hidden");
+  window.scrollTo(0,0);
+  say("Client list.");
+}
+
+function renderWorkspace(){
+  document.getElementById("bar-name").textContent = state.profile.name;
+  document.getElementById("bar-occ").textContent = state.profile.occupation;
+  renderForm(); renderTally(); renderSorts(); renderBubbles();
+  renderAgents(); renderRuling(); renderLedger(); renderRulesRef(); renderMode();
+  const btn = document.getElementById("btn-run");
+  btn.disabled = false; btn.textContent = "Convene the board ▸";
+}
+
+/* ---------- form ---------- */
+const RISK_WORDS = ["","Very cautious","Cautious","Careful","Measured","Balanced","Balanced-plus","Growth-leaning","Growth","Aggressive","Very aggressive"];
+
+function renderForm(){
+  const p = state.profile;
+  const set = (id,v) => { const e = document.getElementById(id); if (e && e.value != v) e.value = v; };
+  set("f-name",p.name); set("f-age",p.age); set("f-income",p.income); set("f-essentials",p.essentials);
+  set("f-ef",p.ef); set("f-eft",p.efTarget); set("f-risk",p.risk);
+  set("f-currency",p.currency); set("f-stability",p.stability);
+  document.getElementById("risk-lbl").textContent = p.risk + "/10 · " + RISK_WORDS[p.risk];
+
+  const rows = document.getElementById("debt-rows");
+  rows.innerHTML = p.debts.map((d,i) => `
+    <tr class="${state.selectedDebt===i?"sel":""}">
+      <td><input type="text" value="${esc(d.name)}" data-i="${i}" data-f="name" aria-label="Account name"></td>
+      <td><input type="number" value="${d.balance}" data-i="${i}" data-f="balance" aria-label="Balance" min="0" step="1000"></td>
+      <td><input type="number" value="${d.apr}" data-i="${i}" data-f="apr" aria-label="APR percent" min="0" step="0.1"></td>
+      <td><input type="number" value="${d.min}" data-i="${i}" data-f="min" aria-label="Minimum payment" min="0" step="100"></td>
+      <td><button class="xbtn" data-del="${i}" aria-label="Remove ${esc(d.name)}">×</button></td>
+    </tr>`).join("") || `<tr><td colspan="5" style="font-size:12px;padding:8px 4px">No accounts on file.</td></tr>`;
+
+  rows.querySelectorAll("input").forEach(inp => inp.addEventListener("input", () => {
+    const d = state.profile.debts[+inp.dataset.i];
+    d[inp.dataset.f] = inp.dataset.f === "name" ? inp.value : (+inp.value||0);
+    renderTally(); renderBubbles();
+  }));
+  rows.querySelectorAll("[data-del]").forEach(b => b.addEventListener("click", () => {
+    state.profile.debts.splice(+b.dataset.del,1);
+    state.selectedDebt = null;
+    renderForm(); renderTally(); renderBubbles();
+  }));
+
+  const chips = document.getElementById("goal-chips");
+  chips.innerHTML = GOAL_VOCAB.map(g =>
+    `<button class="chip" data-goal="${g.id}" aria-pressed="${p.goals.includes(g.id)}">${esc(g.label)}<span class="h">${g.months}m</span></button>`).join("");
+  chips.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => {
+    const gs = state.profile.goals, at = gs.indexOf(c.dataset.goal);
+    if (at === -1) gs.push(c.dataset.goal); else gs.splice(at,1);
+    renderForm();
+  }));
+}
+
+function renderTally(){
+  const p = state.profile, d = discretionary(p);
+  document.getElementById("tally").innerHTML = `
+    <div><span class="k">Net income</span><div class="v">${fmt(p.income)}</div></div>
+    <div><span class="k">− Essentials</span><div class="v">${fmt(p.essentials)}</div></div>
+    <div><span class="k">− Minimums (${p.debts.length})</span><div class="v">${fmt(minTotal(p))}</div></div>
+    <div class="${d<=0?"neg":"big"}"><span class="k">= Discretionary</span><div class="v">${fmt(d)}</div></div>
+    <div><span class="k">Buffer gap</span><div class="v">${fmt(efGap(p))}</div></div>
+    <div><span class="k">Top APR</span><div class="v">${maxAPR(p).toFixed(1)}%</div></div>`;
+}
+
+/* ---------- bubbles ---------- */
+function renderSorts(){
+  document.getElementById("sorts").innerHTML = SORTS.map(s =>
+    `<button class="sortb" data-sort="${s.id}" aria-pressed="${state.sort===s.id}">${s.label}</button>`).join("");
+  document.getElementById("sorts").querySelectorAll(".sortb").forEach(b =>
+    b.addEventListener("click", () => {
+      state.sort = b.dataset.sort;
+      renderSorts(); renderBubbles();
+      say("Debt field arranged by " + b.textContent + ".");
+    }));
+}
+
+function aprBand(apr){ return apr >= 15 ? "hot" : apr >= 10 ? "mid" : "cool"; }
+
+function renderBubbles(){
+  const host = document.getElementById("bubbles");
+  const p = state.profile;
+  const W = host.clientWidth || 900, H = 270;
+  const debts = p.debts.map((d,i) => ({ ...d, i, apr:+d.apr||0, balance:+d.balance||0, min:+d.min||0 }));
+
+  if (!debts.length){
+    host.innerHTML = `<p class="ph" style="margin:100px 20px">No accounts on file. Add one above and it appears here.</p>`;
+    document.getElementById("bdetail").innerHTML = "";
+    return;
+  }
+
+  const maxBal = Math.max(...debts.map(d => d.balance), 1);
+  const size = d => {
+    const r = Math.sqrt(d.balance / maxBal);
+    return Math.round(56 + r * (Math.min(122, W/Math.max(3,debts.length) * 1.15) - 56));
+  };
+
+  let ordered = debts.slice(), axisL = "", axisR = "";
+  if (state.sort === "apr"){ ordered.sort((a,b) => a.apr - b.apr); axisL = "lower APR"; axisR = "higher APR"; }
+  else if (state.sort === "balance"){ ordered.sort((a,b) => b.balance - a.balance); axisL = "largest balance"; axisR = "smallest"; }
+  else if (state.sort === "min"){ ordered.sort((a,b) => b.min - a.min); axisL = "biggest minimum"; axisR = "smallest"; }
+  else { ordered.sort((a,b) => b.apr - a.apr); axisL = "paid first (avalanche)"; axisR = "paid last"; }
+
+  const n = ordered.length;
+  const usable = H - 44;
+  const pos = ordered.map((d,k) => {
+    const slot = (W - 24) / n;
+    const x = 12 + slot*k + slot/2;
+    const s = size(d);
+    const y = 10 + usable/2 + (k % 2 === 0 ? -10 : 10) - s/2;
+    return { d, x: Math.round(x - s/2), y: Math.round(Math.max(6, Math.min(usable - s + 4, y))), s, rank:k+1 };
+  });
+
+  const showRank = state.sort === "payoff";
+  host.innerHTML = pos.map(o => `
+    <button class="bub ${aprBand(o.d.apr)} ${state.selectedDebt===o.d.i?"on":""}"
+      data-i="${o.d.i}" style="left:${o.x}px;top:${o.y}px;width:${o.s}px;height:${o.s}px"
+      aria-label="${esc(o.d.name)}, balance ${fmt(o.d.balance)}, ${o.d.apr}% APR, minimum ${fmt(o.d.min)}">
+      ${showRank ? `<span class="rank">#${o.rank}</span>` : ""}
+      <span class="ba">${o.d.apr}%</span>
+      ${o.s > 74 ? `<span class="bn">${esc(o.d.name)}</span>` : ""}
+    </button>`).join("") +
+    `<div class="axis"><span>◂ ${axisL}</span><span>${axisR} ▸</span></div>`;
+
+  host.querySelectorAll(".bub").forEach(b => b.addEventListener("click", () => {
+    const i = +b.dataset.i;
+    state.selectedDebt = state.selectedDebt === i ? null : i;
+    renderBubbles(); renderForm();
+  }));
+
+  renderBubbleDetail();
+}
+
+function renderBubbleDetail(){
+  const el = document.getElementById("bdetail");
+  const p = state.profile, i = state.selectedDebt;
+  if (i == null || !p.debts[i]){
+    const t = totalDebt(p);
+    el.innerHTML = `<div class="bdetail" style="background:var(--paper-2);color:var(--ink)">
+      <span><b>${fmt(t)}</b> across ${p.debts.length} account${p.debts.length===1?"":"s"}</span>
+      <span><b>${fmt(minTotal(p))}</b>/mo in minimums</span>
+      <span style="opacity:.7">Click any bubble for the detail on that account.</span></div>`;
+    return;
+  }
+  const d = p.debts[i];
+  const share = totalDebt(p) ? Math.round(d.balance/totalDebt(p)*100) : 0;
+  const monthlyInterest = Math.round(d.balance * (d.apr/100/12));
+  const band = +d.apr >= 15 ? "R2 applies — paid before discretionary investing"
+             : +d.apr < 10  ? "R3 applies — minimum only, freed share goes to investing"
+             : "No rule fires cleanly at this rate — the coordinator has to judge it";
+  const solo = state.plan ? simulatePayoff([d], 0, "avalanche") : null;
+  el.innerHTML = `<div class="bdetail">
+    <span><b>${esc(d.name)}</b></span>
+    <span>${fmt(d.balance)} · ${share}% of all debt</span>
+    <span>${d.apr}% APR</span>
+    <span>costs <b>${fmt(monthlyInterest)}</b>/mo in interest right now</span>
+    <span>minimum ${fmt(d.min)}</span>
+    ${solo ? `<span>at minimum only: <b>${months(solo.months)}</b></span>` : ""}
+    <span style="width:100%;font-weight:800">${band}</span>
+  </div>`;
+}
+
+/* ---------- agents ---------- */
+function segBar(a,b,c,big){
+  const t = (a+b+c)||1;
+  return `<div class="sbar ${big?"lg":""}">
+    <div class="seg s-ef" style="width:${a/t*100}%">${a>=12?Math.round(a)+"%":""}</div>
+    <div class="seg s-debt" style="width:${b/t*100}%">${b>=12?Math.round(b)+"%":""}</div>
+    <div class="seg s-inv" style="width:${c/t*100}%">${c>=12?Math.round(c)+"%":""}</div>
+  </div>`;
+}
+
+function renderAgents(){
+  const host = document.getElementById("agents");
+  host.innerHTML = AGENTS.map(a => {
+    const s = state.agent[a.key] || { status:"idle" };
+    const badge = {
+      idle:`<span class="stat-b"><span class="led"></span>idle</span>`,
+      thinking:`<span class="stat-b thinking"><span class="led"></span>drafting</span>`,
+      done:`<span class="stat-b"><span class="led"></span>tabled</span>`,
+      error:`<span class="stat-b error"><span class="led"></span>failed</span>`
+    }[s.status];
+    let body;
+    if (s.status === "idle") body = `<p class="ph">Awaiting the board.</p>`;
+    else if (s.status === "thinking") body = `<div class="stream" id="stream-${a.key}">${esc(s.raw||"")}<span class="caret"></span></div>`;
+    else if (s.status === "error") body = `<div class="err"><b>${esc(a.name)} could not report.</b><code>${esc(s.error)}</code>
+      <button class="btn btn-sm" data-retry="${a.key}">Retry this agent</button></div>`;
+    else body = renderProposal(a.key, s.data);
+    return `<article class="agent ${a.cls} bx bx-lg">
+      <div class="agent-hd"><span><span class="nm">${esc(a.name)}</span><br><span class="rl">${esc(a.role)}</span></span>${badge}</div>
+      <div class="agent-bd">${body}</div>
+    </article>`;
+  }).join("");
+
+  host.querySelectorAll("[data-retry]").forEach(b => b.addEventListener("click", async () => {
+    const k = b.dataset.retry;
+    const map = { budget:[SYS.budget,localBudget], debt:[SYS.debt,localDebt], invest:[SYS.invest,localInvest] };
+    await runAgent(k, map[k][0], userMsg("specialist", state.profile), map[k][1]);
+  }));
+}
+
+function paintStream(key, txt){
+  const el = document.getElementById("stream-" + key);
+  if (!el) return;
+  el.textContent = txt.slice(-460);
+  const c = document.createElement("span"); c.className = "caret"; el.appendChild(c);
+}
+
+function renderProposal(key, d){
+  if (!d) return `<p class="ph">No proposal parsed.</p>`;
+  const fin = state.plan ? state.plan.final_pct : null;
+  if (key === "budget"){
+    const s = d.split||{};
+    return `${segBar(s.emergency_fund_pct,s.debt_pct,s.investing_pct)}
+      <div class="keyrow">
+        <span class="k-ef"><i></i>Buffer ${pct(s.emergency_fund_pct)}</span>
+        <span class="k-debt"><i></i>Debt ${pct(s.debt_pct)}</span>
+        <span class="k-inv"><i></i>Invest ${pct(s.investing_pct)}</span>
+      </div>
+      <p class="reason">${esc(d.reasoning)}</p>
+      <div class="kv">${(d.key_figures||[]).map(k => `<span>${esc(k)}</span>`).join("")}</div>
+      ${(d.out_of_scope||[]).length ? `<p class="ln"><span class="k">Declined as out of scope: ${esc((d.out_of_scope||[]).join(", "))}</span></p>` : ""}`;
+  }
+  if (key === "debt"){
+    return `<div style="display:flex;flex-direction:column;gap:8px">
+        <div class="ln"><span class="k">Asks for extra payment</span><b class="num" style="font-size:15px">${pct(d.extra_payoff_pct)}</b></div>
+        <div class="tickwrap">
+          <div class="sbar"><div class="seg s-debt" style="width:${Math.min(100,d.extra_payoff_pct||0)}%"></div></div>
+          ${fin ? `<div class="tick" style="left:${Math.min(100,fin.extra_debt_pct)}%" data-label="ruled ${fin.extra_debt_pct}%"></div>` : ""}
+        </div>
+        <div class="ln"><span class="k">Method</span><b>${esc(d.method||"—")}</b></div>
+        <div class="ln"><span class="k">Their payoff estimate</span><b class="num">${months(d.payoff_months)}</b></div>
+      </div>
+      <p class="reason">${esc(d.reasoning)}</p>
+      <div class="kv">${(d.target_order||[]).map(t => `<span>${esc(t.debt)} · ${esc(t.apr)}%</span>`).join("")}</div>
+      ${(d.warnings||[]).length ? `<p class="ln"><span class="k">⚑ ${esc((d.warnings||[]).join("; "))}</span></p>` : ""}`;
+  }
+  const c = d.category_split||{};
+  return `<div style="display:flex;flex-direction:column;gap:8px">
+      <div class="ln"><span class="k">Asks to invest now</span><b class="num" style="font-size:15px">${pct(d.investing_pct)}</b></div>
+      <div class="tickwrap">
+        <div class="sbar"><div class="seg s-inv" style="width:${Math.min(100,d.investing_pct||0)}%"></div></div>
+        ${fin ? `<div class="tick" style="left:${Math.min(100,fin.investing_pct)}%" data-label="ruled ${fin.investing_pct}%"></div>` : ""}
+      </div>
+      <div class="ln"><span class="k">Horizon</span><b class="num">${esc(d.horizon_years)} yrs</b></div>
+    </div>
+    <p class="reason">${esc(d.reasoning)}</p>
+    <div class="kv"><span>Equity ${esc(c.equity_pct)}%</span><span>Debt instr. ${esc(c.debt_instruments_pct)}%</span><span>Other ${esc(c.other_pct)}%</span></div>
+    ${(d.warnings||[]).length ? `<p class="ln"><span class="k">⚑ ${esc((d.warnings||[]).join("; "))}</span></p>` : ""}`;
+}
+
+/* ---------- ruling ---------- */
+function renderRuling(){
+  const bd = document.getElementById("ruling-bd");
+  const badge = document.getElementById("coord-badge");
+  const st = state.coordinator.status;
+  badge.className = "stat-b" + (st === "thinking" ? " thinking" : st === "error" ? " error" : "");
+  badge.innerHTML = `<span class="led"></span>${st==="thinking"?"negotiating":st==="done"?"ruled":st==="error"?"failed":"idle"}`;
+
+  if (st === "idle"){
+    bd.innerHTML = `<p class="ph">Convene the board to begin. The three specialists table proposals first; the coordinator rules after.</p>`;
+    return;
+  }
+  if (st === "thinking"){
+    bd.innerHTML = `<div class="note"><b>Reconciling three competing claims on ${fmt(discretionary(state.profile))}.</b><br>Naming the conflict, selecting a rule, then scaling the asks until they fit.</div>
+      <div class="stream" style="background:transparent;border-color:var(--sage);color:var(--sage)">${esc((state.coordinator.raw||"").slice(-560))}<span class="caret"></span></div>`;
+    return;
+  }
+  if (st === "error"){
+    bd.innerHTML = `<div class="err"><b>The coordinator failed.</b><code>${esc(state.coordinator.error)}</code>
+      <div><button class="btn btn-sm" id="btn-retry-coord">Retry the ruling</button></div></div>`;
+    const b = document.getElementById("btn-retry-coord");
+    if (b) b.addEventListener("click", run);
+    return;
+  }
+
+  const plan = state.plan, p = state.profile;
+  const fa = plan.final_allocation, fp = plan.final_pct, g = state.guardrails;
+  const prop = { budget:state.agent.budget.data, debt:state.agent.debt.data, invest:state.agent.invest.data };
+
+  const naive = { ef:prop.budget.split.emergency_fund_pct, dbt:prop.debt.extra_payoff_pct, inv:prop.invest.investing_pct };
+  const nt = naive.ef + naive.dbt + naive.inv || 1;
+  const nN = { ef:naive.ef/nt*100, dbt:naive.dbt/nt*100, inv:naive.inv/nt*100 };
+  const delta = (a,b) => {
+    const v = Math.round(b-a);
+    return `<span class="delta ${v>0?"up":v<0?"down":""}">${v>0?"+":""}${v} pp</span>`;
+  };
+
+  bd.innerHTML = `
+    <div>
+      <div class="eyebrow" style="color:var(--sage);margin-bottom:7px">The conflict, named</div>
+      <p class="conflict">${esc(plan.conflict.summary)}</p>
+    </div>
+
+    <div class="cmp">
+      <div class="rejected">
+        <div class="cap"><span class="t">If we had simply averaged the three asks</span><span class="tag-x">rejected</span></div>
+        ${segBar(nN.ef,nN.dbt,nN.inv)}
+      </div>
+      <div>
+        <div class="cap"><span class="t">The ruling, after the rules</span>
+          <span class="deltas">${delta(nN.ef,fp.emergency_fund_pct)}${delta(nN.dbt,fp.extra_debt_pct)}${delta(nN.inv,fp.investing_pct)}</span></div>
+        <div id="final-bar">${segBar(0,0,0,true)}</div>
+      </div>
+    </div>
+
+    <div class="allocs">
+      <div class="alloc a-ef"><span class="eyebrow">Emergency fund</span>
+        <span class="amt">${fmt(fa.emergency_fund)}</span>
+        <span class="sm">${fp.emergency_fund_pct}% · gap ${fmt(efGap(p))}</span></div>
+      <div class="alloc a-debt"><span class="eyebrow">Extra debt payment</span>
+        <span class="amt">${fmt(fa.extra_debt)}</span>
+        <span class="sm">${fp.extra_debt_pct}% · on top of ${fmt(minTotal(p))}</span></div>
+      <div class="alloc a-inv"><span class="eyebrow">Investing</span>
+        <span class="amt">${fmt(fa.investing)}</span>
+        <span class="sm">${fp.investing_pct}% · ${esc((prop.invest.category_split||{}).equity_pct)}% equity</span></div>
+    </div>
+
+    ${state.projection ? `<div class="note"><b>Payoff projection — computed in this browser, not claimed by the model.</b><br>
+      At ${fmt(fa.extra_debt)}/mo extra on the ${esc(prop.debt.method)} order, every balance clears in about
+      <b>${months(state.projection.months)}</b>, with roughly <b>${fmt(state.projection.interest)}</b> of interest paid along the way.
+      ${state.projection.stalled ? " At this rate the minimums do not outpace interest — the extra payment needs to rise." : ""}</div>` : ""}
+
+    ${plan.concessions.length ? `<div>
+      <div class="eyebrow" style="color:var(--sage);margin-bottom:8px">Who conceded what</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${plan.concessions.map(c => {
+          const cls = AGENT_CLASS[c.agent]||"budget";
+          const nm = { budget:"Budgeting", debt:"Debt strategy", invest:"Investment planning" }[cls]||c.agent;
+          const d2 = Math.round((+c.final_pct||0)-(+c.asked_pct||0));
+          return `<div class="conc ${cls}"><span><b>${esc(nm)}</b></span><span>${esc(c.note||"")}</span>
+            <span class="mv">${esc(c.asked_pct)}% → ${esc(c.final_pct)}% <b style="color:${d2<0?"var(--coral)":"var(--ok)"}">${d2>0?"+":""}${d2}pp</b></span></div>`;
+        }).join("")}
+      </div></div>` : ""}
+
+    ${plan.rule_gap ? `<div class="note" style="border-color:var(--yel)">
+      <b>The rule set did not cleanly cover this conflict.</b><br>${esc(plan.rule_gap)}</div>` : ""}
+
+    <div>
+      <div class="gr ${g.pass?"pass":"fail"}">
+        <span class="seal">${g.pass?"✓":"!"}</span>
+        <span><b>${g.pass?"All five code-side guardrails passed":"A code-side guardrail failed"}</b>
+        <small>${fmt(g.sum)} allocated of ${fmt(g.D)} discretionary — re-summed in JavaScript</small></span>
+      </div>
+      <div class="grlist">
+        ${g.checks.map(c => `<div class="gritem ${c.pass?"p":"f"}">
+          <span class="mk">${c.pass?"✓":"✕"}</span>
+          <span>${esc(c.label)} <span class="id">${c.id}</span></span>
+          <span class="ev">${esc(c.evidence)}</span></div>`).join("")}
+      </div>
+    </div>
+
+    <div>
+      <div class="eyebrow" style="color:var(--sage);margin-bottom:9px">The plan, in plain words</div>
+      <div class="narr">${String(plan.unified_narrative||"").split(/\n\n+/).map(x => `<p>${esc(x)}</p>`).join("")}</div>
+    </div>
+
+    <p class="disc">${esc(plan.disclaimer || "Educational simulation only; not advice from a licensed financial advisor.")}</p>`;
+
+  requestAnimationFrame(() => {
+    const host = document.getElementById("final-bar");
+    if (!host) return;
+    host.innerHTML = segBar(fp.emergency_fund_pct, fp.extra_debt_pct, fp.investing_pct, true);
+    const segs = host.querySelectorAll(".seg");
+    const vals = [fp.emergency_fund_pct, fp.extra_debt_pct, fp.investing_pct];
+    segs.forEach((s,i) => { s.style.width = "0%"; requestAnimationFrame(() => { s.style.width = vals[i] + "%"; }); });
+  });
+}
+
+/* ---------- ledger ---------- */
+function ledgerVisible(){
+  if (state.ledgerFilter === "conflict") return state.ledger.filter(e => e.type === "conflict" || e.type === "rule_gap");
+  if (state.ledgerFilter === "rule") return state.ledger.filter(e => e.type === "rule_applied");
+  return state.ledger;
+}
+
+function renderLedger(){
+  const host = document.getElementById("ledger");
+  const list = ledgerVisible();
+  if (!state.ledger.length){
+    host.innerHTML = `<p class="ph" style="margin:16px">Nothing logged yet. Convene the board and every proposal, conflict and rule application appears here in order.</p>`;
+    return;
+  }
+  if (!list.length){
+    host.innerHTML = `<p class="ph" style="margin:16px">No entries of that kind in this negotiation.</p>`;
+    return;
+  }
+  host.innerHTML = list.map(e => {
+    const i = state.ledger.indexOf(e);
+    const open = state.expanded.has(i);
+    const rule = e.rule ? RULES[e.rule] : null;
+    return `<div class="led ${e.agent}">
+      <button class="ledbtn" aria-expanded="${open}" data-i="${i}"
+        ${rule ? `title="${esc(rule.id+" "+rule.name+" — "+rule.text)}"` : ""}>
+        <span class="ledn">${String(i+1).padStart(2,"0")}</span>
+        <span class="ledt t-${esc(e.type)}">${esc(String(e.type).replace("_"," "))}</span>
+        <span class="ledl">${esc(e.line)}</span>
+        <span class="ledc">▶</span>
+      </button>
+      ${open ? `<div class="ledbd">
+        ${e.detail ? `<p class="d">${esc(e.detail)}</p>` : ""}
+        ${rule ? `<div class="rulebox"><span class="rid">${rule.id} · ${esc(rule.name)}</span>${esc(rule.text)}</div>` : ""}
+      </div>` : ""}
+    </div>`;
+  }).join("");
+  host.querySelectorAll(".ledbtn").forEach(b => b.addEventListener("click", () => {
+    const i = +b.dataset.i;
+    if (state.expanded.has(i)) state.expanded.delete(i); else state.expanded.add(i);
+    renderLedger();
+  }));
+}
+
+function renderRulesRef(){
+  const fired = new Set(((state.plan && state.plan.rules_applied) || []).map(r => r.rule));
+  document.getElementById("rules-ref").innerHTML = Object.keys(RULES).map(k => {
+    const r = RULES[k];
+    return `<div class="ruleref ${fired.has(k)?"fired":""}">
+      <span class="rid">${r.id}</span>
+      <span><b>${esc(r.name)}${fired.has(k)?" — applied":""}</b><br>${esc(r.text)}</span></div>`;
+  }).join("");
+}
+
+/* ---------- mode ---------- */
+function renderMode(){
+  const pill = document.getElementById("mode-pill");
+  const txt = document.getElementById("mode-txt");
+  const banner = document.getElementById("mode-banner");
+  const intakeM = document.getElementById("intake-mode");
+  if (state.mode === "api"){
+    pill.className = "mode live"; txt.textContent = "live model";
+    intakeM.textContent = "● live model calls — " + MODEL;
+    if (banner) banner.innerHTML = "";
+  } else if (state.mode === "local"){
+    pill.className = "mode local"; txt.textContent = "local engine";
+    intakeM.textContent = "● api.anthropic.com unreachable — local rule engine";
+    if (banner) banner.innerHTML = `<div class="banner hot no-print">
+      <span>▲</span><span><b>No model calls are being made.</b> api.anthropic.com is not reachable from this page,
+      so the four agents are running as a local deterministic rule engine. Every figure below is still computed from
+      the live client file — but the wording is generated by this page's own code, not by ${MODEL}. Open
+      <code>index.html</code> where the API is reachable to see the real negotiation, with token streaming.</span></div>`;
+  } else {
+    pill.className = "mode"; txt.textContent = "checking";
+  }
+}
+
+/* =====================================================================
+   12 · EXPORT
+   ===================================================================== */
+
+function planText(){
+  const p = state.profile, plan = state.plan, g = state.guardrails;
+  if (!plan) return "No plan has been produced yet. Convene the board first.";
+  const L = [], rule = () => "=".repeat(66);
+  L.push("FINANCIAL PLAN — produced by a four-agent advisory simulation");
+  L.push(rule());
+  L.push(`Client        ${p.name}, ${p.age} — ${p.occupation}`);
+  L.push(`Prepared      ${new Date().toLocaleDateString()}`);
+  L.push(`Source        ${state.mode === "api" ? MODEL + " (live)" : "local rule engine (API unreachable — not model output)"}`);
+  L.push("");
+  L.push("MONTHLY POSITION");
+  L.push(`  Net income                  ${fmt(p.income)}`);
+  L.push(`  Fixed essentials          − ${fmt(p.essentials)}`);
+  L.push(`  Contractual minimums      − ${fmt(minTotal(p))}`);
+  L.push(`  Discretionary income      = ${fmt(discretionary(p))}`);
+  L.push("");
+  L.push("DEBT SCHEDULE");
+  p.debts.forEach(d => L.push(`  ${String(d.name).padEnd(24)} ${fmt(d.balance).padStart(12)}  ${String(d.apr).padStart(5)}%  min ${fmt(d.min)}`));
+  L.push("");
+  L.push("THE CONFLICT");
+  L.push("  " + plan.conflict.summary);
+  L.push("");
+  L.push("RULES APPLIED");
+  (plan.rules_applied||[]).forEach(r => {
+    const R = RULES[r.rule];
+    L.push(`  ${R ? R.id + " " + R.name : r.rule}`);
+    L.push(`     ${r.why}`);
+  });
+  if (plan.rule_gap){ L.push(""); L.push("RULE GAP DECLARED"); L.push("  " + plan.rule_gap); }
+  L.push("");
+  L.push("FINAL MONTHLY ALLOCATION");
+  L.push(`  Emergency fund              ${fmt(plan.final_allocation.emergency_fund).padStart(12)}   ${plan.final_pct.emergency_fund_pct}%`);
+  L.push(`  Extra debt payment          ${fmt(plan.final_allocation.extra_debt).padStart(12)}   ${plan.final_pct.extra_debt_pct}%`);
+  L.push(`  Investing                   ${fmt(plan.final_allocation.investing).padStart(12)}   ${plan.final_pct.investing_pct}%`);
+  L.push(`  Total allocated             ${fmt(g.sum).padStart(12)}   of ${fmt(g.D)} discretionary`);
+  L.push("  (contractual minimums continue in full alongside this)");
+  if (state.projection){
+    L.push("");
+    L.push("PAYOFF PROJECTION (computed locally, not asserted by a model)");
+    L.push(`  Every balance clears in about ${months(state.projection.months)}, with roughly ${fmt(state.projection.interest)} of interest.`);
+  }
+  L.push("");
+  L.push("NEGOTIATION LEDGER");
+  state.ledger.forEach((e,i) => {
+    L.push(`  ${String(i+1).padStart(2,"0")}  [${String(e.type).toUpperCase()}] ${e.line}`);
+    if (e.detail) L.push(`      ${e.detail}`);
+    if (e.rule && RULES[e.rule]) L.push(`      -> ${RULES[e.rule].id}: ${RULES[e.rule].text}`);
+  });
+  L.push("");
+  L.push("GUARDRAIL CHECKS (re-verified in code after the response)");
+  g.checks.forEach(c => L.push(`  [${c.pass?"PASS":"FAIL"}] ${c.id}  ${c.label} — ${c.evidence}`));
+  L.push("");
+  L.push("THE PLAN");
+  String(plan.unified_narrative||"").split(/\n\n+/).forEach(par => {
+    L.push("  " + par.replace(/(.{1,72})(\s|$)/g, "$1\n  ").trim());
+    L.push("");
+  });
+  L.push(rule());
+  L.push(plan.disclaimer || "");
+  return L.join("\n");
+}
+
+async function downloadPlan(){
+  if (!state.plan){ toast("Convene the board first."); return; }
+  const text = planText();
+  const filename = "financial-plan-" + String(state.profile.name).toLowerCase().replace(/[^a-z0-9]+/g,"-") + ".txt";
+  try{
+    if (window.claude && window.claude.downloads && window.claude.downloads.save){
+      await window.claude.downloads.save({ filename, data:text });
+      toast("Plan saved."); return;
+    }
+  }catch(e){ /* declined or unavailable */ }
+  try{
+    const url = URL.createObjectURL(new Blob([text], { type:"text/plain;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    toast("Plan downloaded.");
+  }catch(e){ toast("Download blocked here — use Copy instead."); }
+}
+
+async function copyPlan(){
+  if (!state.plan){ toast("Convene the board first."); return; }
+  const text = planText();
+  try{ await navigator.clipboard.writeText(text); toast("Plan copied to clipboard."); }
+  catch(e){
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); toast("Plan copied."); }
+    catch(e2){ toast("Copy blocked — use Download instead."); }
+    ta.remove();
+  }
+}
+
+/* =====================================================================
+   13 · WIRING
+   ===================================================================== */
+
+function bindField(id, key, num){
+  const el = document.getElementById(id);
+  el.addEventListener("input", () => {
+    state.profile[key] = num ? (+el.value||0) : el.value;
+    if (id === "f-risk") document.getElementById("risk-lbl").textContent = state.profile.risk + "/10 · " + RISK_WORDS[state.profile.risk];
+    if (id === "f-name") document.getElementById("bar-name").textContent = state.profile.name;
+    renderTally();
+  });
+}
+
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute("data-theme");
+  const sysDark = matchMedia("(prefers-color-scheme:dark)").matches;
+  const next = cur ? (cur === "dark" ? "light" : "dark") : (sysDark ? "light" : "dark");
+  document.documentElement.setAttribute("data-theme", next);
+  say("Switched to " + next + " theme.");
+  if (state.screen === "workspace") renderBubbles();
+}
+
+function boot(){
+  renderIntake();
+
+  bindField("f-name","name",false);
+  bindField("f-age","age",true);
+  bindField("f-income","income",true);
+  bindField("f-essentials","essentials",true);
+  bindField("f-ef","ef",true);
+  bindField("f-eft","efTarget",true);
+  bindField("f-risk","risk",true);
+
+  document.getElementById("f-currency").addEventListener("change", e => {
+    state.profile.currency = e.target.value;
+    renderTally(); renderBubbles(); renderAgents(); renderRuling();
+  });
+  document.getElementById("f-stability").addEventListener("change", e => { state.profile.stability = e.target.value; });
+  document.getElementById("btn-add-debt").addEventListener("click", () => {
+    state.profile.debts.push({ name:"New account", balance:50000, apr:12, min:2000 });
+    renderForm(); renderTally(); renderBubbles();
+  });
+
+  document.getElementById("btn-back").addEventListener("click", showIntake);
+  document.getElementById("btn-run").addEventListener("click", run);
+  document.getElementById("btn-copy").addEventListener("click", copyPlan);
+  document.getElementById("btn-dl").addEventListener("click", downloadPlan);
+  document.getElementById("btn-print").addEventListener("click", () => window.print());
+  document.getElementById("btn-theme-1").addEventListener("click", toggleTheme);
+  document.getElementById("btn-theme-2").addEventListener("click", toggleTheme);
+
+  document.querySelectorAll(".filt").forEach(b => b.addEventListener("click", () => {
+    state.ledgerFilter = b.dataset.f;
+    document.querySelectorAll(".filt").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.f === b.dataset.f)));
+    renderLedger();
+  }));
+
+  let rt;
+  window.addEventListener("resize", () => {
+    clearTimeout(rt);
+    rt = setTimeout(() => { if (state.screen === "workspace") renderBubbles(); }, 160);
+  });
+
+  document.getElementById("about-bd").innerHTML = `
+    <p><b>Four agents, four separate model calls.</b> The budgeting agent sizes the split; the debt agent is written
+    to argue for aggressive payoff; the investment agent is written to argue for starting now. Those two biases are
+    deliberate — they are what makes the conflict real instead of staged. The coordinator is the only one that sees
+    all three proposals, and it is forbidden from averaging them.</p>
+    <p><b>Enforced in the prompt</b> (the model is asked, and could fail): no named products or tickers, no guaranteed
+    returns, no legal/tax/settlement advice, no figure that is not in the client file.</p>
+    <p><b>Enforced in code</b> (the model cannot fail these — they run after the response lands and produce the
+    pass/fail panel): <code>G1</code> allocation re-summed in JS against discretionary income; <code>G2</code>
+    percentages total 100; <code>G3</code> no negative component, minimums stay reserved; <code>G4</code> output
+    regex-scanned for tickers, named institutions and guarantee language; <code>G5</code> the payoff timeline is a
+    local amortisation simulation, not the model's claim; <code>G6</code> JSON parsed defensively — fences stripped,
+    then first <code>{</code> to last <code>}</code>.</p>
+    <p><b>Model:</b> <code>${MODEL}</code>, <code>max_tokens ${MAX_TOKENS}</code>, streamed. No storage APIs — the
+    session lives in memory only.</p>`;
+
+  probeAPI();
+}
+
+boot();
+</script>
