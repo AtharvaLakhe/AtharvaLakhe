@@ -27,7 +27,7 @@
 
 ## Contents
 
-[The problem](#the-problem) · [Why multi-agent](#why-multi-agent) · [The agents](#the-agents) · [Guardrails](#guardrails-contract-vs-code) · [The interface](#the-interface) · [Running it](#running-it) · [Verification](#verification) · [Project structure](#project-structure)
+[The problem](#the-problem) · [Why multi-agent](#why-multi-agent) · [The agents](#the-agents) · [Prompts](PROMPTS.md) · [Guardrails](#guardrails-contract-vs-code) · [The interface](#the-interface) · [Running it](#running-it) · [Verification](#verification) · [Project structure](#project-structure)
 
 ---
 
@@ -58,6 +58,8 @@ Four deterministic agents, each with its own mandate and a strict JSON contract.
 | 2 | **Debt strategy** | Payoff method + share of discretionary income for *extra* payment | Set the investing share |
 | 3 | **Investment planning** | Share to start investing now + category-level mix | Name any product; choose a payoff method |
 | 4 | **Coordinator** | Sees all three. Names the conflict, cites a numbered rule, publishes one allocation | **Average the proposals** |
+
+The full contracts — every system prompt, input, output schema and the coordination prompt — are in [**PROMPTS.md**](PROMPTS.md).
 
 Agents 2 and 3 are written to disagree — one argues certainty of interest saved, the other argues time in the market. **That is the point.** The conflict is structural, not staged, because both are asking for the same rupees out of a pool that cannot cover both.
 
@@ -204,6 +206,7 @@ The engine is exercised headlessly across all four personas and every render pat
 ```text
 .
 ├── index.html              # the entire application — markup, styles, agents, engine
+├── PROMPTS.md              # agent architecture: roles, I/O contracts, coordination prompt
 ├── assets/                 # screenshots used in this README
 ├── examples/
 │   └── sample-plan.md      # a real exported plan
