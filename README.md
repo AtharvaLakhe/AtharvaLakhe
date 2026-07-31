@@ -97,7 +97,9 @@ No `localStorage` or `sessionStorage`; the session lives in memory only.
 - **Case 03 · Aisha & Neil Fernandes** — no toxic debt at all. The conflict is time-horizon, not interest-rate, and the coordinator declares the rule gap.
 - **Blank** — enter your own household.
 
-**The debt field** is the interactive centrepiece: every account is a bubble, area scaled by balance, colour set by APR band — coral is R2 territory, sage is R3, yellow is the judgement zone between them. Re-sort by APR, balance, payoff order or minimum and the bubbles animate to their new positions. Click one for its real cost of carry per month. The rules are legible in the layout before a single agent has spoken.
+**The debt chart** is the interactive centrepiece. Balance is the magnitude, so it gets bar length. APR is a second measure on a different scale — which is never a second axis — so it sets the fill from a single-hue sequential ramp and is stated as a direct label. The rule that applies to each account rides alongside as **text** (`R2 · paid first`, `R3 · minimum only`, `judgement call`), never colour alone. Re-sort by APR, balance, payoff order or minimum and the bars redraw; hover for cost of carry; click for the full account detail; toggle to a table view for the same data as figures.
+
+The rules are legible in the layout before a single agent has spoken.
 
 **The rejected average.** The ruling shows what a naive average of the three asks *would* have produced — struck through and labelled rejected — directly above the actual allocation, with per-bucket `pp` deltas. It demonstrates the thesis instead of asserting it.
 
@@ -105,7 +107,11 @@ No `localStorage` or `sessionStorage`; the session lives in memory only.
 
 ### Design
 
-Neo-brutalist, adapted for a tool rather than a landing page: 2px borders, hard zero-blur shadows, buttons that depress into their own shadow. Yellow `#ffe17c` carries the intake screen; the workspace drops to bone so that long sessions don't fatigue. The coordinator's ruling is the only charcoal block on the page, because it is the only verdict. Colour does data work rather than decoration — an account's APR band sets its bubble colour, so R2 and R3 are visible before the negotiation starts.
+Neo-brutalist, adapted for a tool rather than a landing page: offset zero-blur shadows, buttons that depress into their own shadow, a soft straw intake screen giving way to a bone workspace. The coordinator's ruling is the only charcoal block on the page, because it is the only verdict.
+
+The palette is **computed, not eyeballed**. The three allocation series are a validated categorical set — light `#00907a / #c4553a / #5a6ec4`, dark `#25ab8e / #cf6a4f / #7b8ad8` — passing all six checks in both modes: lightness band, chroma floor, CVD separation (worst adjacent pair ΔE 8.5, above the floor), normal-vision separation, and contrast against each surface. Dark mode is *selected* rather than flipped: its own steps from the same hues, validated against the dark surface.
+
+An earlier revision ran every surface at maximum contrast — saturated fills, pure-black 2px borders in light, near-white borders in dark — and it was tiring to look at. Accents now sit well below full saturation, borders are a mid tone rather than an extreme, and large filled blocks became washes with a coloured edge. The brutalist language survives; the glare doesn't.
 
 Typography is a system stack by design: the page ships as one file with zero network dependencies, and a webfont that fails to load silently is worse than a system face chosen deliberately.
 
@@ -113,9 +119,9 @@ Typography is a system stack by design: the page ships as one file with zero net
 
 ## Verification
 
-The engine was exercised headless across all four personas and every render path — proposals, ruling, ledger, bubble geometry at each sort, plus thinking / error / mixed-agent states.
+The engine was exercised headless across all four personas and every render path — proposals, ruling, ledger, the chart at each sort in both chart and table view, plus thinking / error / mixed-agent states.
 
-Results: allocations sum exactly to discretionary income in all four cases, percentages total 100, traces land in the 5–7 range, narratives run 103–129 words, bubbles stay in bounds at every sort, and no `undefined` or `NaN` reaches the DOM.
+Results: allocations sum exactly to discretionary income in all four cases, percentages total 100, traces land in the 5–7 range, narratives run 103–129 words, bar widths stay within 0–100% with the largest always at full scale, every row carries an `aria-label` and a text rule chip, the empty-account case is handled, and no `undefined` or `NaN` reaches the DOM.
 
 ---
 
