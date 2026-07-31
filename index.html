@@ -1417,7 +1417,7 @@ async function run(){
   btn.disabled = true; btn.textContent = "In session…";
   resetRun(); renderAgents(); renderRuling(); renderLedger(); renderRulesRef(); renderStepNav();
   say("Three specialists are preparing proposals.");
-  document.getElementById("sec-debt").scrollIntoView({ behavior:"smooth", block:"start" });
+  /* The board runs on the review stage; the agents are already in view there. */
 
   const u = userMsg("specialist", p);
   const [b,d,i] = await Promise.all([
