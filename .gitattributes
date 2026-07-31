@@ -1,0 +1,6 @@
+# Normalise line endings so diffs stay clean across machines.
+* text=auto eol=lf
+
+# Binary assets
+*.png binary
+*.jpg binary
