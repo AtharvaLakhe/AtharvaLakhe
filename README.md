@@ -27,7 +27,7 @@
 
 ## Contents
 
-[The problem](#the-problem) · [Why multi-agent](#why-multi-agent) · [The agents](#the-agents) · [Prompts](PROMPTS.md) · [Guardrails](#guardrails-contract-vs-code) · [The interface](#the-interface) · [Running it](#running-it) · [Verification](#verification) · [Project structure](#project-structure)
+[The problem](#the-problem) · [Why multi-agent](#why-multi-agent) · [The agents](#the-agents) · [Prompts](PROMPTS.md) · [Guardrails](#guardrails-contract-vs-code) · [The interface](#the-interface) · [Running it](#running-it) · [Verification](#verification) · [Sample output](#sample-output) · [Project structure](#project-structure)
 
 ---
 
