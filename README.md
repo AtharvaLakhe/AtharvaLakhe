@@ -124,8 +124,12 @@ Every static-analysis tool is stateless: it emits findings and never learns whet
 ## Activity
 
 <p align="center">
-  <img src="https://github-readme-stats.vercel.app/api?username=AtharvaLakhe&show_icons=true&hide_border=false&bg_color=0D1117&title_color=FFB454&icon_color=FFB454&text_color=C9D1D9&border_color=30363D" height="165" alt="GitHub stats" />
-  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=AtharvaLakhe&layout=compact&hide_border=false&bg_color=0D1117&title_color=FFB454&text_color=C9D1D9&border_color=30363D&langs_count=8" height="165" alt="Top languages" />
+  <img src="https://github-profile-summary-cards.vercel.app/api/cards/profile-details?username=AtharvaLakhe&theme=github_dark" alt="Profile summary" />
+</p>
+
+<p align="center">
+  <img src="https://github-profile-summary-cards.vercel.app/api/cards/repos-per-language?username=AtharvaLakhe&theme=github_dark" height="200" alt="Repositories per language" />
+  <img src="https://github-profile-summary-cards.vercel.app/api/cards/most-commit-language?username=AtharvaLakhe&theme=github_dark" height="200" alt="Most committed language" />
 </p>
 
 <p align="center">
