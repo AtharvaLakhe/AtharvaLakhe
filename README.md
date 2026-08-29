@@ -50,6 +50,15 @@ Measured on 24 held-out scenes, fixed degradation seeds, both methods scored aft
   <a href="https://github.com/AtharvaLakhe/PSR-Net"><img src="https://img.shields.io/badge/Source-PSR--Net-30363D?style=for-the-badge&logo=github" alt="Source" /></a>
 </p>
 
+<p align="center">
+  <img src="https://img.shields.io/badge/license-MIT-FFB454?style=flat-square&labelColor=0D1117" alt="MIT licensed" />
+  <img src="https://img.shields.io/badge/parameters-714%2C401-30363D?style=flat-square&labelColor=0D1117" alt="714,401 parameters" />
+  <img src="https://img.shields.io/badge/runtime-onnxruntime--web-30363D?style=flat-square&labelColor=0D1117" alt="onnxruntime-web" />
+  <img src="https://img.shields.io/github/languages/top/AtharvaLakhe/PSR-Net?style=flat-square&labelColor=0D1117&color=30363D" alt="Top language" />
+  <img src="https://img.shields.io/github/languages/code-size/AtharvaLakhe/PSR-Net?style=flat-square&labelColor=0D1117&color=30363D" alt="Code size" />
+  <img src="https://img.shields.io/github/last-commit/AtharvaLakhe/PSR-Net?style=flat-square&labelColor=0D1117&color=30363D" alt="Last commit" />
+</p>
+
 ---
 
 ## Projects
@@ -65,6 +74,14 @@ Measured on 24 held-out scenes, fixed degradation seeds, both methods scored aft
 <p align="center">
   <a href="https://github.com/AtharvaLakhe/SPARC"><img src="https://raw.githubusercontent.com/AtharvaLakhe/SPARC/main/docs/media/globe.png" width="49%" alt="SPARC orbital terminal" /></a>
   <a href="https://github.com/AtharvaLakhe/CarbonLedger"><img src="https://raw.githubusercontent.com/AtharvaLakhe/CarbonLedger/master/docs/screenshots/live-operations.png" width="49%" alt="CarbonLedger live operations dashboard" /></a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/github/last-commit/AtharvaLakhe/PSR-Net?style=flat-square&label=PSR-Net&labelColor=0D1117&color=FFB454" alt="PSR-Net last commit" />
+  <img src="https://img.shields.io/github/last-commit/AtharvaLakhe/SPARC?style=flat-square&label=SPARC&labelColor=0D1117&color=FFB454" alt="SPARC last commit" />
+  <img src="https://img.shields.io/github/last-commit/AtharvaLakhe/CarbonLedger?style=flat-square&label=CarbonLedger&labelColor=0D1117&color=FFB454" alt="CarbonLedger last commit" />
+  <img src="https://img.shields.io/github/last-commit/AtharvaLakhe/FancePro?style=flat-square&label=FancePro&labelColor=0D1117&color=FFB454" alt="FancePro last commit" />
+  <img src="https://img.shields.io/github/last-commit/AtharvaLakhe/LancePro?style=flat-square&label=LancePro&labelColor=0D1117&color=FFB454" alt="LancePro last commit" />
 </p>
 
 ---
@@ -87,6 +104,8 @@ Every static-analysis tool is stateless: it emits findings and never learns whet
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript" />
   <img src="https://img.shields.io/badge/C++-00599C?style=for-the-badge&logo=cplusplus&logoColor=white" alt="C++" />
   <img src="https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java" />
+  <img src="https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white" alt="HTML5" />
+  <img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white" alt="CSS3" />
 </p>
 
 **AI & scientific computing**
@@ -107,13 +126,18 @@ Every static-analysis tool is stateless: it emits findings and never learns whet
   <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
   <img src="https://img.shields.io/badge/Tailwind-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS" />
   <img src="https://img.shields.io/badge/MapLibre-295DAA?style=for-the-badge&logo=maplibre&logoColor=white" alt="MapLibre GL" />
+  <img src="https://img.shields.io/badge/WebGL-990000?style=for-the-badge&logo=webgl&logoColor=white" alt="WebGL" />
+  <img src="https://img.shields.io/badge/Recharts-22B5BF?style=for-the-badge&logo=chartdotjs&logoColor=white" alt="Recharts" />
 </p>
 
 **Backend & tooling**
 
 <p>
   <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/Pydantic-E92063?style=for-the-badge&logo=pydantic&logoColor=white" alt="Pydantic" />
+  <img src="https://img.shields.io/badge/Uvicorn-499848?style=for-the-badge&logo=gunicorn&logoColor=white" alt="Uvicorn" />
   <img src="https://img.shields.io/badge/Node.js-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js" />
+  <img src="https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white" alt="Git" />
   <img src="https://img.shields.io/badge/Playwright-2EAD33?style=for-the-badge&logo=playwright&logoColor=white" alt="Playwright" />
   <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white" alt="GitHub Actions" />
   <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel" />
@@ -152,7 +176,14 @@ Every static-analysis tool is stateless: it emits findings and never learns whet
 
 ## Open source
 
-Every project here is MIT or Apache-2.0 and built to be read. Issues and pull requests are welcome — **SPARC** and **PSR-Net** have the most surface area for contributors, with methodology docs, an API contract, and a reproducible evaluation script.
+Everything here is built to be read, and most of it ships under MIT or Apache-2.0. Issues and pull requests are welcome — **SPARC** and **PSR-Net** have the most surface area for contributors, with methodology docs, an API contract, and a reproducible evaluation script.
+
+<p align="center">
+  <img src="https://img.shields.io/github/license/AtharvaLakhe/SPARC?style=flat-square&label=SPARC&labelColor=0D1117&color=30363D" alt="SPARC license" />
+  <img src="https://img.shields.io/github/license/AtharvaLakhe/CarbonLedger?style=flat-square&label=CarbonLedger&labelColor=0D1117&color=30363D" alt="CarbonLedger license" />
+  <img src="https://img.shields.io/github/license/AtharvaLakhe/FancePro?style=flat-square&label=FancePro&labelColor=0D1117&color=30363D" alt="FancePro license" />
+  <img src="https://img.shields.io/badge/PSR--Net-MIT-30363D?style=flat-square&labelColor=0D1117" alt="PSR-Net license" />
+</p>
 
 <p align="center">
   <a href="mailto:atharvalakhe09@gmail.com"><img src="https://img.shields.io/badge/Email-atharvalakhe09%40gmail.com-FFB454?style=for-the-badge&logo=gmail&logoColor=0D1117" alt="Email" /></a>
