@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="1200" height="320" role="img" aria-label="Atharva Lakhe — independent builder">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0D1117"/>
+      <stop offset="55%" stop-color="#0F1621"/>
+      <stop offset="100%" stop-color="#131C2B"/>
+    </linearGradient>
+
+    <radialGradient id="limb" cx="30%" cy="28%" r="78%">
+      <stop offset="0%" stop-color="#8FB6E8"/>
+      <stop offset="45%" stop-color="#3E5C86"/>
+      <stop offset="78%" stop-color="#1B2739"/>
+      <stop offset="100%" stop-color="#0D1117"/>
+    </radialGradient>
+
+    <linearGradient id="rule" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#58A6FF" stop-opacity="0.9"/>
+      <stop offset="60%" stop-color="#1F6FEB" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#1F6FEB" stop-opacity="0"/>
+    </linearGradient>
+
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1F6FEB" stop-opacity="0.20"/>
+      <stop offset="100%" stop-color="#1F6FEB" stop-opacity="0"/>
+    </radialGradient>
+
+    <clipPath id="frame"><rect width="1200" height="320" rx="12"/></clipPath>
+  </defs>
+
+  <g clip-path="url(#frame)">
+    <rect width="1200" height="320" fill="url(#sky)"/>
+    <ellipse cx="965" cy="150" rx="330" ry="260" fill="url(#glow)"/>
+
+    <!-- faint scan grid -->
+    <g stroke="#58A6FF" stroke-opacity="0.05">
+      <path d="M0 60H1200M0 120H1200M0 180H1200M0 240H1200"/>
+      <path d="M120 0V320M300 0V320M480 0V320M660 0V320M840 0V320M1020 0V320"/>
+    </g>
+
+    <!-- starfield -->
+    <g fill="#C9D1D9">
+      <circle cx="80" cy="52" r="1.1" opacity=".45"/><circle cx="196" cy="248" r="1" opacity=".3"/>
+      <circle cx="372" cy="86" r="1.3" opacity=".4"/><circle cx="268" cy="176" r="1" opacity=".25"/>
+      <circle cx="612" cy="44" r="1.1" opacity=".35"/><circle cx="536" cy="268" r="1.2" opacity=".3"/>
+      <circle cx="712" cy="212" r="1" opacity=".25"/><circle cx="452" cy="300" r="1" opacity=".2"/>
+      <circle cx="150" cy="150" r="1" opacity=".2"/><circle cx="640" cy="140" r="1" opacity=".18"/>
+    </g>
+
+    <!-- shadowed limb: lit rim, dark floor -->
+    <circle cx="985" cy="164" r="196" fill="url(#limb)" opacity="0.92"/>
+    <circle cx="985" cy="164" r="196" fill="none" stroke="#58A6FF" stroke-opacity="0.30"/>
+    <circle cx="1052" cy="120" r="150" fill="#0D1117" opacity="0.55"/>
+    <g fill="#0D1117" opacity="0.32">
+      <ellipse cx="918" cy="196" rx="40" ry="27"/>
+      <ellipse cx="1004" cy="246" rx="26" ry="18"/>
+      <ellipse cx="880" cy="118" rx="19" ry="13"/>
+    </g>
+
+    <!-- orbital arc -->
+    <path d="M700 300 A 300 300 0 0 1 1180 92" fill="none" stroke="#58A6FF" stroke-opacity="0.28" stroke-dasharray="5 9"/>
+    <circle cx="1180" cy="92" r="4.5" fill="#58A6FF"/>
+    <circle cx="1180" cy="92" r="10" fill="none" stroke="#58A6FF" stroke-opacity="0.35"/>
+
+    <!-- type -->
+    <text x="78" y="146" font-family="ui-monospace,SFMono-Regular,'JetBrains Mono','Fira Code',Menlo,monospace"
+          font-size="54" font-weight="600" fill="#E6EDF3" letter-spacing="1.5">Atharva Lakhe</text>
+
+    <rect x="80" y="170" width="150" height="2" fill="url(#rule)"/>
+
+    <text x="80" y="208" font-family="ui-monospace,SFMono-Regular,'JetBrains Mono','Fira Code',Menlo,monospace"
+          font-size="17" fill="#58A6FF" letter-spacing="0.6">independent builder</text>
+
+    <text x="80" y="240" font-family="ui-monospace,SFMono-Regular,'JetBrains Mono','Fira Code',Menlo,monospace"
+          font-size="14.5" fill="#8B949E" letter-spacing="0.3">multi-agent systems · remote-sensing ML · developer tooling</text>
+
+    <text x="80" y="272" font-family="ui-monospace,SFMono-Regular,'JetBrains Mono','Fira Code',Menlo,monospace"
+          font-size="13" fill="#6E7681" font-style="italic">a number you cannot trace is not a result</text>
+
+    <rect x="0.5" y="0.5" width="1199" height="319" rx="12" fill="none" stroke="#30363D"/>
+  </g>
+</svg>

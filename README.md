@@ -1,7 +1,9 @@
-<h1 align="center">Atharva Lakhe</h1>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/AtharvaLakhe/AtharvaLakhe/main/assets/banner.svg" alt="Atharva Lakhe — independent builder: multi-agent systems, remote-sensing ML, developer tooling" width="100%" />
+</p>
 
 <p align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=500&size=20&pause=1200&color=58A6FF&center=true&vCenter=true&width=760&lines=Independent+builder;Multi-agent+systems%2C+remote-sensing+ML%2C+dev+tooling;Systems+that+make+their+own+reasoning+inspectable;A+number+you+cannot+trace+is+not+a+result" alt="Independent builder — multi-agent systems, remote-sensing ML, developer tooling" />
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=500&size=19&pause=1400&color=58A6FF&center=true&vCenter=true&width=820&lines=PSR-Net+%E2%80%94+terrain+from+craters+dark+for+two+billion+years;SPARC+%E2%80%94+change+you+can+trace+back+to+the+scene;CarbonLedger+%E2%80%94+a+hash+chain+you+can+watch+heal;FancePro+%E2%80%94+four+agents%2C+one+budget%2C+one+audit+trail" alt="PSR-Net, SPARC, CarbonLedger, FancePro" />
 </p>
 
 <p align="center">
@@ -36,8 +38,19 @@ A theme runs through all of it: **the output has to carry its own evidence.** Ev
 | **[LancePro](https://github.com/AtharvaLakhe/LancePro)** | Local-first scope-creep protection for freelancers — contract parsing and evidence capture | `React` `TS` `Web Crypto` | — |
 
 <p align="center">
-  <a href="https://github.com/AtharvaLakhe/SPARC"><img src="https://raw.githubusercontent.com/AtharvaLakhe/SPARC/main/docs/media/globe.png" width="49%" alt="SPARC orbital terminal" /></a>
-  <a href="https://github.com/AtharvaLakhe/CarbonLedger"><img src="https://raw.githubusercontent.com/AtharvaLakhe/CarbonLedger/master/docs/screenshots/live-operations.png" width="49%" alt="CarbonLedger live operations dashboard" /></a>
+  <a href="https://psr-net.vercel.app/psr/"><img src="https://raw.githubusercontent.com/AtharvaLakhe/PSR-Net/main/docs/hero.png" width="32.5%" alt="PSR-Net — the flight from lunar orbit down to a shadowed crater floor" /></a>
+  <a href="https://github.com/AtharvaLakhe/SPARC"><img src="https://raw.githubusercontent.com/AtharvaLakhe/SPARC/main/docs/media/globe.png" width="32.5%" alt="SPARC — orbital terminal" /></a>
+  <a href="https://github.com/AtharvaLakhe/CarbonLedger"><img src="https://raw.githubusercontent.com/AtharvaLakhe/CarbonLedger/master/docs/screenshots/live-operations.png" width="32.5%" alt="CarbonLedger — live operations dashboard" /></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/AtharvaLakhe/PSR-Net"><img src="https://raw.githubusercontent.com/AtharvaLakhe/PSR-Net/main/docs/pipeline.png" width="32.5%" alt="PSR-Net — the trained network stage with live metrics" /></a>
+  <a href="https://github.com/AtharvaLakhe/SPARC"><img src="https://raw.githubusercontent.com/AtharvaLakhe/SPARC/main/docs/media/evidence.png" width="32.5%" alt="SPARC — evidence sheet with scene inventory and parameter hash" /></a>
+  <a href="https://atharvalakhe.github.io/FancePro/"><img src="https://raw.githubusercontent.com/AtharvaLakhe/FancePro/main/assets/04-ruling.png" width="32.5%" alt="FancePro — the coordinator ruling" /></a>
+</p>
+
+<p align="center">
+  <sub>PSR-Net · SPARC · CarbonLedger &nbsp;—&nbsp; PSR-Net pipeline · SPARC evidence sheet · FancePro ruling</sub>
 </p>
 
 <p align="center">
