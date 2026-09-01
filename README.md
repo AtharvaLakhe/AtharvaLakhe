@@ -115,9 +115,6 @@ A theme runs through all of it: **the output has to carry its own evidence.** Ev
   <img src="https://github-profile-summary-cards.vercel.app/api/cards/most-commit-language?username=AtharvaLakhe&theme=github_dark" alt="Most committed language" />
 </p>
 
-<p align="center">
-  <img src="https://streak-stats.demolab.com?user=AtharvaLakhe&background=0D1117&border=30363D&stroke=30363D&ring=58A6FF&fire=58A6FF&currStreakLabel=58A6FF&sideLabels=C9D1D9&currStreakNum=C9D1D9&sideNums=C9D1D9&dates=8B949E" alt="Contribution streak" />
-</p>
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/AtharvaLakhe/AtharvaLakhe/main/profile-3d-contrib/profile-night-view.svg" alt="3D contribution calendar" />
