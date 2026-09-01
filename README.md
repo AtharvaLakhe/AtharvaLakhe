@@ -27,16 +27,6 @@ A theme runs through all of it: **the output has to carry its own evidence.** Ev
 
 ---
 
-## Projects
-
-| Project | What it does | Stack | Live |
-| :--- | :--- | :--- | :--- |
-| **[PSR-Net](https://github.com/AtharvaLakhe/PSR-Net)** | Terrain recovery from permanently shadowed lunar craters imaged by Chandrayaan-2 OHRC | `PyTorch` `ONNX` `Three.js` | [▶](https://psr-net.vercel.app/psr/) |
-| **[SPARC](https://github.com/AtharvaLakhe/SPARC)** | District-level environmental change from open Earth-observation data, traceable to the scene it came from | `FastAPI` `React` `MapLibre` | [▶](https://sparc-git-main-sanskars-projects-31a9e8dd.vercel.app/) |
-| **[CarbonLedger](https://github.com/AtharvaLakhe/CarbonLedger)** | Carbon-credit marketplace and MRV platform for India's CCTS — SHA-256 hash chain, no crypto library | `React` `Node` `SSE` | — |
-| **[FancePro](https://github.com/AtharvaLakhe/FancePro)** | Four agents argue over one household budget — and you can audit how the disagreement was settled | `Vanilla JS` `0 deps` | [▶](https://atharvalakhe.github.io/FancePro/) |
-| **[LancePro](https://github.com/AtharvaLakhe/LancePro)** | Local-first scope-creep protection for freelancers — contract parsing and evidence capture | `React` `TS` `Web Crypto` | — |
-
 <p align="center">
   <a href="https://psr-net.vercel.app/psr/"><img src="https://raw.githubusercontent.com/AtharvaLakhe/PSR-Net/main/docs/hero.png" width="32.5%" alt="PSR-Net — the flight from lunar orbit down to a shadowed crater floor" /></a>
   <a href="https://github.com/AtharvaLakhe/SPARC"><img src="https://raw.githubusercontent.com/AtharvaLakhe/SPARC/main/docs/media/globe.png" width="32.5%" alt="SPARC — orbital terminal" /></a>
