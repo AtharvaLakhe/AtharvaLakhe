@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=500&size=19&pause=1400&color=58A6FF&center=true&vCenter=true&width=820&lines=PSR-Net+%E2%80%94+terrain+from+craters+dark+for+two+billion+years;SPARC+%E2%80%94+change+you+can+trace+back+to+the+scene;CarbonLedger+%E2%80%94+a+hash+chain+you+can+watch+heal;FancePro+%E2%80%94+four+agents%2C+one+budget%2C+one+audit+trail" alt="PSR-Net, SPARC, CarbonLedger, FancePro" />
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=500&size=19&pause=1400&color=58A6FF&center=true&vCenter=true&width=820&lines=Security4Her+%E2%80%94+help+is+one+long+press+away;PSR-Net+%E2%80%94+terrain+from+craters+dark+for+two+billion+years;SPARC+%E2%80%94+change+you+can+trace+back+to+the+scene;CarbonLedger+%E2%80%94+a+hash+chain+you+can+watch+heal;FancePro+%E2%80%94+four+agents%2C+one+budget%2C+one+audit+trail" alt="Security4Her, PSR-Net, SPARC, CarbonLedger, FancePro" />
 </p>
 
 <p align="center">
@@ -22,8 +22,39 @@ I build systems that make their own reasoning inspectable.
 - 🤖 &nbsp;**Multi-agent systems** — agents that argue, where the disagreement itself is the auditable artifact
 - 🔗 &nbsp;**Verifiable state** — hash chains written from scratch, with tampering demonstrated live
 - 🧪 &nbsp;**Developer tooling** — a code reviewer graded by the repository's own future
+- 📱 &nbsp;**Mobile & wearables** — a women's safety system for Android and Wear OS, with *"HELP HELP HELP"* recognised on the watch itself and evidence sealed in a SHA-256 chain
 
 A theme runs through all of it: **the output has to carry its own evidence.** Every project below ships the numbers that justify it — and reports the ones that don't.
+
+---
+
+## Latest: Security4Her
+
+<p align="center">
+  <a href="https://security4her.vercel.app"><img src="https://raw.githubusercontent.com/AtharvaLakhe/AtharvaLakhe/main/assets/security4her-showcase.png" width="100%" alt="Security4Her on four phone screens and a Wear OS watch" /></a>
+</p>
+
+<table>
+<tr>
+<td width="36%" align="center"><a href="https://security4her.vercel.app"><img src="https://raw.githubusercontent.com/AtharvaLakhe/AtharvaLakhe/main/assets/security4her-tour.gif" width="250" alt="Tour: home screen, quick actions, and a fake call being answered" /></a></td>
+<td valign="middle">
+
+**A women's safety system for Android and Wear OS.** One press, one knock or three words, and help is on its way. Built with team OBSIDIAN.
+
+- **One trigger, five actions:** SMS with location, a live map, audio and video evidence, an automatic call, and location texts for contacts without data
+- **Five ways to raise it:** hold SOS, the watch button or a shake, *"HELP HELP HELP"* to the watch, three knocks through a pocket, or a missed Safe Journey check-in
+- **Voice SOS runs entirely on the watch** (offline Vosk); tuned on 276 recordings in street noise with zero false triggers
+- **Evidence that holds up:** chained SHA-256 fingerprints and a 24-hour delete lock
+- **Looks after itself:** the phone installs the watch app over Wi-Fi once; after that both apps update themselves
+
+<a href="https://security4her.vercel.app"><img src="https://img.shields.io/badge/install-security4her.vercel.app-FF4D5E?style=flat&labelColor=161B22" alt="Install Security4Her" /></a>
+<img src="https://img.shields.io/badge/Kotlin-161B22?style=flat&logo=kotlin&logoColor=7F52FF" alt="Kotlin" />
+<img src="https://img.shields.io/badge/Wear_OS-161B22?style=flat&logo=wearos&logoColor=4285F4" alt="Wear OS" />
+<img src="https://img.shields.io/badge/version-1.0.0-161B22?style=flat&color=21262D" alt="Version 1.0.0" />
+
+</td>
+</tr>
+</table>
 
 ---
 
@@ -60,6 +91,7 @@ A theme runs through all of it: **the output has to carry its own evidence.** Ev
 <p>
   <img src="https://img.shields.io/badge/Python-161B22?style=flat&logo=python&logoColor=3776AB" alt="Python" />
   <img src="https://img.shields.io/badge/TypeScript-161B22?style=flat&logo=typescript&logoColor=3178C6" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Kotlin-161B22?style=flat&logo=kotlin&logoColor=7F52FF" alt="Kotlin" />
   <img src="https://img.shields.io/badge/JavaScript-161B22?style=flat&logo=javascript&logoColor=F7DF1E" alt="JavaScript" />
   <img src="https://img.shields.io/badge/C++-161B22?style=flat&logo=cplusplus&logoColor=649AD2" alt="C++" />
   <img src="https://img.shields.io/badge/Java-161B22?style=flat&logo=openjdk&logoColor=ED8B00" alt="Java" />
@@ -89,6 +121,15 @@ A theme runs through all of it: **the output has to carry its own evidence.** Ev
   <img src="https://img.shields.io/badge/Recharts-161B22?style=flat&logo=chartdotjs&logoColor=22B5BF" alt="Recharts" />
 </p>
 
+**Mobile**
+
+<p>
+  <img src="https://img.shields.io/badge/Kotlin-161B22?style=flat&logo=kotlin&logoColor=7F52FF" alt="Kotlin" />
+  <img src="https://img.shields.io/badge/Jetpack_Compose-161B22?style=flat&logo=jetpackcompose&logoColor=4285F4" alt="Jetpack Compose" />
+  <img src="https://img.shields.io/badge/Android-161B22?style=flat&logo=android&logoColor=3DDC84" alt="Android" />
+  <img src="https://img.shields.io/badge/Wear_OS-161B22?style=flat&logo=wearos&logoColor=4285F4" alt="Wear OS" />
+</p>
+
 **Backend & tooling**
 
 <p>
@@ -96,6 +137,7 @@ A theme runs through all of it: **the output has to carry its own evidence.** Ev
   <img src="https://img.shields.io/badge/Pydantic-161B22?style=flat&logo=pydantic&logoColor=E92063" alt="Pydantic" />
   <img src="https://img.shields.io/badge/Uvicorn-161B22?style=flat&logo=gunicorn&logoColor=6BAF6B" alt="Uvicorn" />
   <img src="https://img.shields.io/badge/Node.js-161B22?style=flat&logo=nodedotjs&logoColor=5FA04E" alt="Node.js" />
+  <img src="https://img.shields.io/badge/Supabase-161B22?style=flat&logo=supabase&logoColor=3FCF8E" alt="Supabase" />
   <img src="https://img.shields.io/badge/Git-161B22?style=flat&logo=git&logoColor=F05032" alt="Git" />
   <img src="https://img.shields.io/badge/Playwright-161B22?style=flat&logo=playwright&logoColor=2EAD33" alt="Playwright" />
   <img src="https://img.shields.io/badge/GitHub_Actions-161B22?style=flat&logo=githubactions&logoColor=58A6FF" alt="GitHub Actions" />
