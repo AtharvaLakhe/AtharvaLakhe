@@ -1,7 +1,4 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/hero-dark.svg">
-  <img src="assets/hero-light.svg" width="100%" alt="Atharva Lakhe. I build software that shows its work: from lunar craters that have been dark for two billion years to a safety app that listens for help.">
-</picture>
+<img src="assets/hero.svg" width="100%" alt="Atharva Lakhe. I build software that listens for help, sees in permanent shadow, reads a district from orbit, catches a rewritten record, argues before it advises, and guards a freelancer's scope.">
 
 <a href="https://security4her.vercel.app"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/plates/security4her-dark.png">
@@ -37,8 +34,8 @@
 
 <br>
 
-Every repository here ships the numbers behind its claims, including the ones that didn't go my way. The amber
-mark on each project is the one you can check yourself.
+A number you cannot trace is not a result. Every repository here ships the numbers behind its claims, including
+the ones that didn't go my way, and the amber mark on each project is the one you can check yourself.
 
 I work in **Kotlin** and **Jetpack Compose** for Android and Wear OS, **Python**, **PyTorch** and **ONNX** for
 imagery, and **TypeScript** and **React** for the web.
