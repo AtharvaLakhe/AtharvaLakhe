@@ -3,8 +3,6 @@
   <img src="assets/hero-light.svg" width="100%" alt="Atharva Lakhe. I build software that shows its work: from lunar craters that have been dark for two billion years to a safety app that listens for help.">
 </picture>
 
-<br><br>
-
 <a href="https://security4her.vercel.app"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/plates/security4her-dark.png">
   <img src="assets/plates/security4her-light.png" width="100%" alt="Security4Her: a women's safety system for Android and Wear OS. Voice SOS runs entirely on the watch, tested on 276 recordings in street noise with zero false triggers.">
