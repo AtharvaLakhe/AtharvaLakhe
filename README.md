@@ -1,190 +1,48 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/AtharvaLakhe/AtharvaLakhe/main/assets/banner.svg" alt="Atharva Lakhe — independent builder: multi-agent systems, remote-sensing ML, developer tooling" width="100%" />
-</p>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/hero-dark.svg">
+  <img src="assets/hero-light.svg" width="100%" alt="Atharva Lakhe. I build software that shows its work: from lunar craters that have been dark for two billion years to a safety app that listens for help.">
+</picture>
 
-<p align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=500&size=19&pause=1400&color=58A6FF&center=true&vCenter=true&width=820&lines=Security4Her+%E2%80%94+help+is+one+long+press+away;PSR-Net+%E2%80%94+terrain+from+craters+dark+for+two+billion+years;SPARC+%E2%80%94+change+you+can+trace+back+to+the+scene;CarbonLedger+%E2%80%94+a+hash+chain+you+can+watch+heal;FancePro+%E2%80%94+four+agents%2C+one+budget%2C+one+audit+trail" alt="Security4Her, PSR-Net, SPARC, CarbonLedger, FancePro" />
-</p>
+<br><br>
 
-<p align="center">
-  <a href="mailto:atharvalakhe09@gmail.com"><img src="https://img.shields.io/badge/email-atharvalakhe09%40gmail.com-1F6FEB?style=flat&logo=gmail&logoColor=E6EDF3&labelColor=161B22" alt="Email" /></a>
-  <a href="#open-source"><img src="https://img.shields.io/badge/open%20to-collaboration-21262D?style=flat&logo=github&logoColor=58A6FF&labelColor=161B22" alt="Open to collaboration" /></a>
-  <img src="https://komarev.com/ghpvc/?username=AtharvaLakhe&color=1F6FEB&style=flat&label=views&labelColor=161B22" alt="Profile views" />
-</p>
+<a href="https://security4her.vercel.app"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/plates/security4her-dark.png">
+  <img src="assets/plates/security4her-light.png" width="100%" alt="Security4Her: a women's safety system for Android and Wear OS. Voice SOS runs entirely on the watch, tested on 276 recordings in street noise with zero false triggers.">
+</picture></a>
 
----
-
-## About
-
-I build systems that make their own reasoning inspectable.
-
-- 🛰 &nbsp;**Remote sensing** — recovering terrain from lunar craters that have been dark for two billion years
-- 🤖 &nbsp;**Multi-agent systems** — agents that argue, where the disagreement itself is the auditable artifact
-- 🔗 &nbsp;**Verifiable state** — hash chains written from scratch, with tampering demonstrated live
-- 🧪 &nbsp;**Developer tooling** — a code reviewer graded by the repository's own future
-- 📱 &nbsp;**Mobile & wearables** — a women's safety system for Android and Wear OS, with *"HELP HELP HELP"* recognised on the watch itself and evidence sealed in a SHA-256 chain
-
-A theme runs through all of it: **the output has to carry its own evidence.** Every project below ships the numbers that justify it — and reports the ones that don't.
-
----
-
-## Latest: Security4Her
-
-<p align="center">
-  <a href="https://security4her.vercel.app"><img src="https://raw.githubusercontent.com/AtharvaLakhe/AtharvaLakhe/main/assets/security4her-showcase.png" width="100%" alt="Security4Her on four phone screens and a Wear OS watch" /></a>
-</p>
-
-<table>
-<tr>
-<td width="36%" align="center"><a href="https://security4her.vercel.app"><img src="https://raw.githubusercontent.com/AtharvaLakhe/AtharvaLakhe/main/assets/security4her-tour.gif" width="250" alt="Tour: home screen, quick actions, and a fake call being answered" /></a></td>
-<td valign="middle">
-
-**A women's safety system for Android and Wear OS.** One press, one knock or three words, and help is on its way. Built with team OBSIDIAN.
-
-- **One trigger, five actions:** SMS with location, a live map, audio and video evidence, an automatic call, and location texts for contacts without data
-- **Five ways to raise it:** hold SOS, the watch button or a shake, *"HELP HELP HELP"* to the watch, three knocks through a pocket, or a missed Safe Journey check-in
-- **Voice SOS runs entirely on the watch** (offline Vosk); tuned on 276 recordings in street noise with zero false triggers
-- **Evidence that holds up:** chained SHA-256 fingerprints and a 24-hour delete lock
-- **Looks after itself:** the phone installs the watch app over Wi-Fi once; after that both apps update themselves
-
-<a href="https://security4her.vercel.app"><img src="https://img.shields.io/badge/install-security4her.vercel.app-FF4D5E?style=flat&labelColor=161B22" alt="Install Security4Her" /></a>
-<img src="https://img.shields.io/badge/Kotlin-161B22?style=flat&logo=kotlin&logoColor=7F52FF" alt="Kotlin" />
-<img src="https://img.shields.io/badge/Wear_OS-161B22?style=flat&logo=wearos&logoColor=4285F4" alt="Wear OS" />
-<img src="https://img.shields.io/badge/version-1.0.0-161B22?style=flat&color=21262D" alt="Version 1.0.0" />
-
-</td>
-</tr>
-</table>
-
----
-
-<p align="center">
-  <a href="https://psr-net.vercel.app/psr/"><img src="https://raw.githubusercontent.com/AtharvaLakhe/PSR-Net/main/docs/hero.png" width="32.5%" alt="PSR-Net — the flight from lunar orbit down to a shadowed crater floor" /></a>
-  <a href="https://github.com/AtharvaLakhe/SPARC"><img src="https://raw.githubusercontent.com/AtharvaLakhe/SPARC/main/docs/media/globe.png" width="32.5%" alt="SPARC — orbital terminal" /></a>
-  <a href="https://github.com/AtharvaLakhe/CarbonLedger"><img src="https://raw.githubusercontent.com/AtharvaLakhe/CarbonLedger/master/docs/screenshots/live-operations.png" width="32.5%" alt="CarbonLedger — live operations dashboard" /></a>
-</p>
-
-<p align="center">
-  <a href="https://github.com/AtharvaLakhe/PSR-Net"><img src="https://raw.githubusercontent.com/AtharvaLakhe/PSR-Net/main/docs/pipeline.png" width="32.5%" alt="PSR-Net — the trained network stage with live metrics" /></a>
-  <a href="https://github.com/AtharvaLakhe/SPARC"><img src="https://raw.githubusercontent.com/AtharvaLakhe/SPARC/main/docs/media/evidence.png" width="32.5%" alt="SPARC — evidence sheet with scene inventory and parameter hash" /></a>
-  <a href="https://atharvalakhe.github.io/FancePro/"><img src="https://raw.githubusercontent.com/AtharvaLakhe/FancePro/main/assets/04-ruling.png" width="32.5%" alt="FancePro — the coordinator ruling" /></a>
-</p>
-
-<p align="center">
-  <sub>PSR-Net · SPARC · CarbonLedger &nbsp;—&nbsp; PSR-Net pipeline · SPARC evidence sheet · FancePro ruling</sub>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/github/last-commit/AtharvaLakhe/PSR-Net?style=flat&label=PSR-Net&labelColor=161B22&color=1F6FEB" alt="PSR-Net last commit" />
-  <img src="https://img.shields.io/github/last-commit/AtharvaLakhe/SPARC?style=flat&label=SPARC&labelColor=161B22&color=1F6FEB" alt="SPARC last commit" />
-  <img src="https://img.shields.io/github/last-commit/AtharvaLakhe/CarbonLedger?style=flat&label=CarbonLedger&labelColor=161B22&color=1F6FEB" alt="CarbonLedger last commit" />
-  <img src="https://img.shields.io/github/last-commit/AtharvaLakhe/FancePro?style=flat&label=FancePro&labelColor=161B22&color=1F6FEB" alt="FancePro last commit" />
-  <img src="https://img.shields.io/github/last-commit/AtharvaLakhe/LancePro?style=flat&label=LancePro&labelColor=161B22&color=1F6FEB" alt="LancePro last commit" />
-</p>
-
----
-
-## Toolkit
-
-**Languages**
+<a href="https://github.com/AtharvaLakhe/PSR-Net"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/plates/psr-net-dark.png">
+  <img src="assets/plates/psr-net-light.png" width="100%" alt="PSR-Net: recovers terrain from permanently shadowed lunar craters imaged by Chandrayaan-2, in the browser. 20.28 dB against 17.27 dB for the raw frame on 24 held-out scenes.">
+</picture></a>
 
 <p>
-  <img src="https://img.shields.io/badge/Python-161B22?style=flat&logo=python&logoColor=3776AB" alt="Python" />
-  <img src="https://img.shields.io/badge/TypeScript-161B22?style=flat&logo=typescript&logoColor=3178C6" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Kotlin-161B22?style=flat&logo=kotlin&logoColor=7F52FF" alt="Kotlin" />
-  <img src="https://img.shields.io/badge/JavaScript-161B22?style=flat&logo=javascript&logoColor=F7DF1E" alt="JavaScript" />
-  <img src="https://img.shields.io/badge/C++-161B22?style=flat&logo=cplusplus&logoColor=649AD2" alt="C++" />
-  <img src="https://img.shields.io/badge/Java-161B22?style=flat&logo=openjdk&logoColor=ED8B00" alt="Java" />
-  <img src="https://img.shields.io/badge/HTML5-161B22?style=flat&logo=html5&logoColor=E34F26" alt="HTML5" />
-  <img src="https://img.shields.io/badge/CSS3-161B22?style=flat&logo=css3&logoColor=1572B6" alt="CSS3" />
+<a href="https://github.com/AtharvaLakhe/SPARC"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/plates/sparc-dark.png">
+  <img src="assets/plates/sparc-light.png" width="49.5%" alt="SPARC: district-level environmental change from open satellite data. Every figure carries its scene IDs and parameter hash.">
+</picture></a>
+<a href="https://github.com/AtharvaLakhe/CarbonLedger"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/plates/carbonledger-dark.png">
+  <img src="assets/plates/carbonledger-light.png" width="49.5%" alt="CarbonLedger: a carbon-credit registry for India's Carbon Credit Trading Scheme, with SHA-256 and proof-of-work written from scratch.">
+</picture></a>
 </p>
-
-**AI & scientific computing**
 
 <p>
-  <img src="https://img.shields.io/badge/PyTorch-161B22?style=flat&logo=pytorch&logoColor=EE4C2C" alt="PyTorch" />
-  <img src="https://img.shields.io/badge/ONNX-161B22?style=flat&logo=onnx&logoColor=7DB4F5" alt="ONNX" />
-  <img src="https://img.shields.io/badge/NumPy-161B22?style=flat&logo=numpy&logoColor=4DABCF" alt="NumPy" />
-  <img src="https://img.shields.io/badge/Groq-161B22?style=flat&logo=groq&logoColor=F55036" alt="Groq" />
+<a href="https://github.com/AtharvaLakhe/FancePro"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/plates/fancepro-dark.png">
+  <img src="assets/plates/fancepro-light.png" width="49.5%" alt="FancePro: four AI agents argue over one household budget. The coordinator must cite a numbered rule and may never average.">
+</picture></a>
+<a href="https://github.com/AtharvaLakhe/LancePro"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/plates/lancepro-dark.png">
+  <img src="assets/plates/lancepro-light.png" width="49.5%" alt="LancePro: scope-creep protection for freelancers that runs in the browser. Every piece of evidence is stored with its SHA-256 hash.">
+</picture></a>
 </p>
 
-**Frontend**
+<br>
 
-<p>
-  <img src="https://img.shields.io/badge/React-161B22?style=flat&logo=react&logoColor=61DAFB" alt="React" />
-  <img src="https://img.shields.io/badge/Next.js-161B22?style=flat&logo=nextdotjs&logoColor=E6EDF3" alt="Next.js" />
-  <img src="https://img.shields.io/badge/Three.js-161B22?style=flat&logo=threedotjs&logoColor=E6EDF3" alt="Three.js" />
-  <img src="https://img.shields.io/badge/Vite-161B22?style=flat&logo=vite&logoColor=A78BFA" alt="Vite" />
-  <img src="https://img.shields.io/badge/Tailwind-161B22?style=flat&logo=tailwindcss&logoColor=06B6D4" alt="Tailwind CSS" />
-  <img src="https://img.shields.io/badge/MapLibre-161B22?style=flat&logo=maplibre&logoColor=7BA7E8" alt="MapLibre GL" />
-  <img src="https://img.shields.io/badge/WebGL-161B22?style=flat&logo=webgl&logoColor=E06C6C" alt="WebGL" />
-  <img src="https://img.shields.io/badge/Recharts-161B22?style=flat&logo=chartdotjs&logoColor=22B5BF" alt="Recharts" />
-</p>
+Every repository here ships the numbers behind its claims, including the ones that didn't go my way. The amber
+mark on each project is the one you can check yourself.
 
-**Mobile**
+I work in **Kotlin** and **Jetpack Compose** for Android and Wear OS, **Python**, **PyTorch** and **ONNX** for
+imagery, and **TypeScript** and **React** for the web.
 
-<p>
-  <img src="https://img.shields.io/badge/Kotlin-161B22?style=flat&logo=kotlin&logoColor=7F52FF" alt="Kotlin" />
-  <img src="https://img.shields.io/badge/Jetpack_Compose-161B22?style=flat&logo=jetpackcompose&logoColor=4285F4" alt="Jetpack Compose" />
-  <img src="https://img.shields.io/badge/Android-161B22?style=flat&logo=android&logoColor=3DDC84" alt="Android" />
-  <img src="https://img.shields.io/badge/Wear_OS-161B22?style=flat&logo=wearos&logoColor=4285F4" alt="Wear OS" />
-</p>
-
-**Backend & tooling**
-
-<p>
-  <img src="https://img.shields.io/badge/FastAPI-161B22?style=flat&logo=fastapi&logoColor=009688" alt="FastAPI" />
-  <img src="https://img.shields.io/badge/Pydantic-161B22?style=flat&logo=pydantic&logoColor=E92063" alt="Pydantic" />
-  <img src="https://img.shields.io/badge/Uvicorn-161B22?style=flat&logo=gunicorn&logoColor=6BAF6B" alt="Uvicorn" />
-  <img src="https://img.shields.io/badge/Node.js-161B22?style=flat&logo=nodedotjs&logoColor=5FA04E" alt="Node.js" />
-  <img src="https://img.shields.io/badge/Supabase-161B22?style=flat&logo=supabase&logoColor=3FCF8E" alt="Supabase" />
-  <img src="https://img.shields.io/badge/Git-161B22?style=flat&logo=git&logoColor=F05032" alt="Git" />
-  <img src="https://img.shields.io/badge/Playwright-161B22?style=flat&logo=playwright&logoColor=2EAD33" alt="Playwright" />
-  <img src="https://img.shields.io/badge/GitHub_Actions-161B22?style=flat&logo=githubactions&logoColor=58A6FF" alt="GitHub Actions" />
-  <img src="https://img.shields.io/badge/Vercel-161B22?style=flat&logo=vercel&logoColor=E6EDF3" alt="Vercel" />
-</p>
-
----
-
-## Activity
-
-<p align="center">
-  <img src="https://github-profile-summary-cards.vercel.app/api/cards/profile-details?username=AtharvaLakhe&theme=github_dark" alt="Profile summary" />
-</p>
-
-<p align="center">
-  <img src="https://github-profile-summary-cards.vercel.app/api/cards/repos-per-language?username=AtharvaLakhe&theme=github_dark" alt="Repositories per language" />
-  <img src="https://github-profile-summary-cards.vercel.app/api/cards/most-commit-language?username=AtharvaLakhe&theme=github_dark" alt="Most committed language" />
-</p>
-
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/AtharvaLakhe/AtharvaLakhe/main/profile-3d-contrib/profile-night-view.svg" alt="3D contribution calendar" />
-</p>
-
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/AtharvaLakhe/AtharvaLakhe/output/github-contribution-grid-snake-dark.svg" />
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/AtharvaLakhe/AtharvaLakhe/output/github-contribution-grid-snake.svg" />
-    <img alt="Contribution snake" src="https://raw.githubusercontent.com/AtharvaLakhe/AtharvaLakhe/output/github-contribution-grid-snake.svg" />
-  </picture>
-</p>
-
----
-
-## Open source
-
-Everything here is open source and built to be read. Every repository carries a contributing guide, issue templates, and a pull-request checklist written against that project's actual constraints. **SPARC** and **PSR-Net** have the most surface area for contributors — methodology docs, an API contract, and a reproducible evaluation script.
-
-<p align="center">
-  <img src="https://img.shields.io/badge/PSR--Net-MIT-21262D?style=flat&labelColor=161B22" alt="PSR-Net license" />
-  <img src="https://img.shields.io/github/license/AtharvaLakhe/SPARC?style=flat&label=SPARC&labelColor=161B22&color=21262D" alt="SPARC license" />
-  <img src="https://img.shields.io/github/license/AtharvaLakhe/CarbonLedger?style=flat&label=CarbonLedger&labelColor=161B22&color=21262D" alt="CarbonLedger license" />
-  <img src="https://img.shields.io/github/license/AtharvaLakhe/FancePro?style=flat&label=FancePro&labelColor=161B22&color=21262D" alt="FancePro license" />
-  <img src="https://img.shields.io/github/license/AtharvaLakhe/LancePro?style=flat&label=LancePro&labelColor=161B22&color=21262D" alt="LancePro license" />
-</p>
-
-<p align="center">
-  <a href="mailto:atharvalakhe09@gmail.com"><img src="https://img.shields.io/badge/email-atharvalakhe09%40gmail.com-1F6FEB?style=flat&logo=gmail&logoColor=E6EDF3&labelColor=161B22" alt="Email" /></a>
-  <a href="https://github.com/AtharvaLakhe"><img src="https://img.shields.io/badge/github-AtharvaLakhe-21262D?style=flat&logo=github&logoColor=58A6FF&labelColor=161B22" alt="GitHub" /></a>
-</p>
+Say hello at [atharvalakhe09@gmail.com](mailto:atharvalakhe09@gmail.com).
