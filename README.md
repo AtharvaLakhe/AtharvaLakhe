@@ -1,12 +1,9 @@
-<img src="assets/paper.png" width="100%" alt="Software That Shows Its Work, by Atharva Lakhe. A one-page paper presenting six systems: Security4Her, PSR-Net, SPARC, CarbonLedger, FancePro and LancePro, each with the measurement or rule a reader can check.">
+<img src="assets/launch/hero.svg" width="100%" alt="Atharva Lakhe. I build software that shows its work. Android and Wear OS. Satellite imagery. AI agents.">
 
-### References
-
-1. **Security4Her.** A women's safety system for Android and Wear OS. [security4her.vercel.app](https://security4her.vercel.app)
-2. **PSR-Net.** Terrain recovery from permanently shadowed lunar craters. [github.com/AtharvaLakhe/PSR-Net](https://github.com/AtharvaLakhe/PSR-Net)
-3. **SPARC.** District-level environmental change from open satellite data. [github.com/AtharvaLakhe/SPARC](https://github.com/AtharvaLakhe/SPARC)
-4. **CarbonLedger.** A tamper-evident carbon-credit registry. [github.com/AtharvaLakhe/CarbonLedger](https://github.com/AtharvaLakhe/CarbonLedger)
-5. **FancePro.** Four AI agents, one household budget, an auditable settlement. [github.com/AtharvaLakhe/FancePro](https://github.com/AtharvaLakhe/FancePro)
-6. **LancePro.** Scope-creep protection for freelancers. [github.com/AtharvaLakhe/LancePro](https://github.com/AtharvaLakhe/LancePro)
-
-Correspondence: [atharvalakhe09@gmail.com](mailto:atharvalakhe09@gmail.com)
+<a href="https://security4her.vercel.app"><img src="assets/launch/security4her.png" width="100%" alt="Security4Her. Help, one press away. A women's safety system for Android and Wear OS. 276 recordings in street noise, zero false triggers."></a>
+<a href="https://github.com/AtharvaLakhe/PSR-Net"><img src="assets/launch/psr-net.png" width="100%" alt="PSR-Net. Seeing into permanent shadow. 20.28 dB against 17.27 dB for the raw frame on 24 held-out scenes."></a>
+<a href="https://github.com/AtharvaLakhe/SPARC"><img src="assets/launch/sparc.png" width="100%" alt="SPARC. Change you can trace to the scene. Every figure carries its scene IDs and parameter hash."></a>
+<a href="https://github.com/AtharvaLakhe/CarbonLedger"><img src="assets/launch/carbonledger.png" width="100%" alt="CarbonLedger. A registry that catches tampering. SHA-256 and proof-of-work, no crypto library."></a>
+<a href="https://github.com/AtharvaLakhe/FancePro"><img src="assets/launch/fancepro.png" width="100%" alt="FancePro. Four agents. One budget. No averaging. Every ruling cites a numbered rule."></a>
+<a href="https://github.com/AtharvaLakhe/LancePro"><img src="assets/launch/lancepro.png" width="100%" alt="LancePro. Scope creep, caught in writing. A SHA-256 hash is stored with every piece of evidence."></a>
+<a href="mailto:atharvalakhe09@gmail.com"><img src="assets/launch/close.png" width="100%" alt="Say hello: atharvalakhe09@gmail.com"></a>
