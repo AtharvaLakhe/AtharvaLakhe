@@ -1,4 +1,4 @@
-"""Draw katana/banner.svg: a falling katana cuts a sheet of paper, the paper tears away,
+"""Draw katana/banner.svg: a falling katana cuts an ink-brushed page, the page tears away,
 and my details and the last year of contributions are underneath.
 
     python katana/build.py            # needs GITHUB_TOKEN, or a logged-in gh CLI
@@ -17,7 +17,6 @@ LOGIN = "AtharvaLakhe"
 HERE = Path(__file__).resolve().parent
 OUT = HERE / "banner.svg"
 W, H = 1200, 700
-TS = 2.75  # when the paper starts to tear
 rnd = random.Random(11)
 
 # ---------------------------------------------------------------- data
@@ -116,8 +115,102 @@ def piece(edge, side):
     return poly, rim
 
 
+
+
+# ---------------------------------------------------------------- timing (seconds)
+
+FALL, FALL_DUR = 0.3, 2.3      # the katana drops, slows to a near stop mid-cut, then whips out
+IMP = FALL + FALL_DUR          # impact frame
+SLIDE = IMP + 0.6              # after a beat of silence, the cut half slides along the line
+TS = SLIDE + 0.45              # then the page tears and falls
+
+
+# ---------------------------------------------------------------- ink and impact
+
+def focus(cx, cy, rx, ry, n, fill, wmin=.004, wmax=.014, reach=1600):
+    """Focus lines: rays from far outside toward a clear centre."""
+    d = []
+    for i in range(n):
+        a = i / n * 2 * math.pi + rnd.uniform(-.02, .02)
+        k = rnd.uniform(1.0, 1.6)
+        ix, iy = cx + math.cos(a) * rx * k, cy + math.sin(a) * ry * k
+        w = rnd.uniform(wmin, wmax)
+        d.append(f"M{f(ix)},{f(iy)}L{f(cx + math.cos(a + w) * reach)},{f(cy + math.sin(a + w) * reach)}"
+                 f"L{f(cx + math.cos(a - w) * reach)},{f(cy + math.sin(a - w) * reach)}Z")
+    return f'<path d="{"".join(d)}" fill="{fill}"/>'
+
+
+def starburst(cx, cy, r0, r1, n, fill, stroke="none"):
+    """The flash at the point of a cut: long thin spikes of uneven length."""
+    p = []
+    for i in range(n * 2):
+        a = i / (n * 2) * 2 * math.pi
+        r = r0 if i % 2 else r1 * rnd.uniform(.45, 1)
+        p.append((cx + math.cos(a) * r, cy + math.sin(a) * r * .8))
+    return f'<path d="M{pts(p)}Z" fill="{fill}" stroke="{stroke}" stroke-width="2" stroke-linejoin="miter"/>'
+
+
+def slash(width, fill, rough=2.0):
+    """A tapered stroke along the cut, thick in the middle."""
+    top, bot = [], []
+    for i in range(121):
+        t = i / 120
+        s = -40 + (_L + 80) * t
+        w = width * (math.sin(math.pi * t) ** .6) + rnd.uniform(-rough, rough) * (0 < t < 1)
+        top.append(along(s, w))
+        bot.append(along(s, -w * .45))
+    return f'<path d="M{pts(top + bot[::-1])}Z" fill="{fill}"/>'
+
+
+def path_lines(n, fill):
+    """Speed lines running parallel to the fall, either side of the blade's path."""
+    d = []
+    for _ in range(n):
+        off = rnd.choice([-1, 1]) * rnd.uniform(26, 190)
+        s = rnd.uniform(-60, _L)
+        ln, w = rnd.uniform(60, 260), rnd.uniform(.5, 1.6)
+        a, b = along(s, off), along(s + ln, off)
+        d.append(f"M{f(a[0])},{f(a[1])}L{f(b[0] + N[0] * w)},{f(b[1] + N[1] * w)}L{f(b[0] - N[0] * w)},{f(b[1] - N[1] * w)}Z")
+    return f'<path d="{"".join(d)}" fill="{fill}"/>'
+
+
+def enso(cx, cy, R):
+    """A dry-brush ensō: an ink-rich start that thins into broken bristle marks."""
+    a0, sweep = math.radians(118), math.radians(318)
+
+    def width(t):
+        return 46 * (min(1, t * 9) ** .5) * (1 - .62 * t)
+    core_o, core_i = [], []
+    for i in range(140):
+        t = i / 139 * .72
+        a = a0 - sweep * t
+        r = R + rnd.uniform(-1.2, 1.2)
+        core_o.append((cx + math.cos(a) * (r + width(t) / 2), cy + math.sin(a) * (r + width(t) / 2)))
+        core_i.append((cx + math.cos(a) * (r - width(t) / 2), cy + math.sin(a) * (r - width(t) / 2)))
+    o = [f'<path d="M{pts(core_o + core_i[::-1])}Z" fill="#0c0c0c"/>']
+    bristles = []
+    for b in range(46):
+        off = (b / 45 - .5)
+        end = rnd.uniform(.82, 1.0) if abs(off) < .3 else rnd.uniform(.6, .95)
+        seg, t = [], rnd.uniform(.0, .05)
+        while t < end:
+            a = a0 - sweep * t
+            r = R + off * width(t) * rnd.uniform(.95, 1.05)
+            if t > .55 and rnd.random() < .07 + (t - .55) * .5:  # the brush runs dry
+                if len(seg) > 1:
+                    bristles.append(seg)
+                seg = []
+            else:
+                seg.append((cx + math.cos(a) * r, cy + math.sin(a) * r))
+            t += .006
+        if len(seg) > 1:
+            bristles.append(seg)
+    o.append(f'<path d="{"".join("M" + pts(s) for s in bristles)}" fill="none" stroke="#0c0c0c" stroke-width="1.7" stroke-linecap="round"/>')
+    return "".join(o)
+
+
 def paper():
-    """The sheet the katana falls through: washi with an ink character on it."""
+    """The sheet: washi, an ensō, and calligraphy, in the manner of an ink-wash manga."""
     fib = []
     for _ in range(140):
         x, y = rnd.uniform(-50, W + 50), rnd.uniform(-50, H + 50)
@@ -125,41 +218,73 @@ def paper():
         dx, dy = math.cos(a) * ln, math.sin(a) * ln
         fib.append(f'<path d="M{f(x)},{f(y)}q{f(dx / 2 + rnd.uniform(-12, 12))},{f(dy / 2 + rnd.uniform(-12, 12))} {f(dx)},{f(dy)}" '
                    f'stroke="{rnd.choice(["#d2d1ca", "#dcdbd5", "#c8c7c0"])}" stroke-width="{f(rnd.uniform(.4, 1.1))}" opacity="{f(rnd.uniform(.4, .9))}" fill="none"/>')
-    splat = "".join(f'<circle cx="{f(rnd.gauss(560, 170))}" cy="{f(rnd.gauss(330, 120))}" r="{f(rnd.expovariate(.8) + .4)}" fill="#0d0d0d" opacity="{f(rnd.uniform(.5, 1))}"/>' for _ in range(36))
-    kana = "".join(f'<text x="1112" y="{88 + i * 36}" font-family="K" font-size="30" text-anchor="middle" fill="#151515">{c}</text>'
+    splat = "".join(f'<circle cx="{f(rnd.gauss(470, 120))}" cy="{f(rnd.gauss(560, 50))}" r="{f(rnd.expovariate(.7) + .4)}" fill="#0c0c0c" opacity="{f(rnd.uniform(.6, 1))}"/>' for _ in range(28))
+    kana = "".join(f'<text x="1150" y="{120 + i * 30}" font-family="K" font-size="25" text-anchor="middle" fill="#1a1a1a">{c}</text>'
                    for i, c in enumerate("アタルヴァ・ラケ"))
-    return (f'<rect x="-400" y="-400" width="{W + 800}" height="{H + 800}" fill="#e7e6e1"/>'
-            f'<rect x="-400" y="-400" width="{W + 800}" height="{H + 800}" filter="url(#wash)" opacity=".55"/>'
-            + "".join(fib) +
-            f'<text x="560" y="555" font-family="K" font-size="450" text-anchor="middle" fill="#0b0b0b">斬</text>'
-            + splat + kana +
-            f'<rect x="1084" y="400" width="56" height="56" rx="6" fill="#0b0b0b"/>'
-            f'<text x="1112" y="442" font-family="K" font-size="38" text-anchor="middle" fill="#e7e6e1">侍</text>'
+    return (f'<rect x="-400" y="-400" width="{W + 800}" height="{H + 800}" fill="#e9e8e3"/>'
+            f'<rect x="-400" y="-400" width="{W + 800}" height="{H + 800}" filter="url(#wash)" opacity=".5"/>'
+            + "".join(fib) + enso(540, 350, 225) + splat +
+            f'<text x="1030" y="250" font-family="K" font-size="170" text-anchor="middle" fill="#0c0c0c">一</text>'
+            f'<text x="1030" y="440" font-family="K" font-size="170" text-anchor="middle" fill="#0c0c0c">閃</text>'
+            + kana +
+            f'<rect x="1124" y="378" width="52" height="52" rx="4" fill="#0c0c0c"/>'
+            f'<text x="1150" y="417" font-family="K" font-size="36" text-anchor="middle" fill="#e9e8e3">侍</text>'
             f'<text x="60" y="660" font-family="S" font-size="15" letter-spacing="3" fill="#6d6c66">{esc("github.com/" + LOGIN)}</text>')
 
 
 def katana(scale=1.0, line=False):
-    """A bare katana, tip at the origin, hilt toward negative x."""
+    """A bare katana, tip at the origin, hilt toward negative x.
+
+    Inked the way manga draw steel: white blade, a hard black reflection band on the flat,
+    a crisp hamon, star glints, and a cord-wrapped hilt in hard black and white."""
     k = scale
     blade = f"M{-440*k},{-9*k}Q{-200*k},{-11*k} {-30*k},{-8*k}L0,{-3*k}Q{-14*k},{4*k} {-32*k},{6*k}Q{-200*k},{11*k} {-440*k},{9*k}Z"
-    if line:
-        stroke = 'fill="none" stroke="#e8e8e8" stroke-width="1.1"'
-        o = [f'<path d="{blade}" {stroke}/>',
-             f'<path d="M{-440*k},{2*k}Q{-200*k},{2*k} {-30*k},{-1*k}" fill="none" stroke="#777" stroke-width=".8"/>']
-    else:
-        o = [f'<path d="{blade}" fill="url(#steel)" stroke="#0d0d0d" stroke-width="1"/>']
-        ham = [(x, 9 * k * (1 - (x / (-440 * k)) ** 0 * 0) - 4.5 * k - 1.8 * k * math.sin(x / (11 * k)) - 1 * k * math.sin(x / (4 * k)))
-               for x in [-438 * k + i * 4 for i in range(int(400 * k / 4))]]
-        o.append(f'<path d="M{pts(ham)}" fill="none" stroke="#fff" stroke-width="1.6" opacity=".9"/>')
-        o.append(f'<path d="M{-440*k},{-2*k}Q{-200*k},{-3*k} {-30*k},{-3*k}" fill="none" stroke="#6f6f6f" stroke-width=".8"/>')
-    o.append(f'<rect x="{-454*k}" y="{-11*k}" width="{14*k}" height="{22*k}" rx="2" fill="{"none" if line else "#dcdcdc"}" stroke="{"#e8e8e8" if line else "#0d0d0d"}" stroke-width=".9"/>')
-    o.append(f'<ellipse cx="{-461*k}" cy="0" rx="{7*k}" ry="{30*k}" fill="{"#000" if line else "#0b0b0b"}" stroke="#e8e8e8" stroke-width="{1.2 if line else 1.6}"/>')
-    o.append(f'<path d="M{-468*k},{-13*k}L{-610*k},{-11*k}Q{-616*k},0 {-610*k},{11*k}L{-468*k},{13*k}Z" fill="{"#000" if line else "#0b0b0b"}" stroke="#e8e8e8" stroke-width="{1.1 if line else 1.4}"/>')
-    for i in range(7):
-        cx = (-484 - i * 18.5) * k
-        o.append(f'<path d="M{f(cx-7.5*k)},0L{f(cx)},{f(-9*k)}L{f(cx+7.5*k)},0L{f(cx)},{f(9*k)}Z" fill="{"none" if line else "#efefef"}" stroke="{"#bdbdbd" if line else "none"}" stroke-width=".8"/>')
-    return "".join(o)
+    if line:  # the thin divider on the page underneath
+        o = [f'<path d="{blade}" fill="none" stroke="#e8e8e8" stroke-width="1.1"/>',
+             f'<path d="M{-440*k},{2*k}Q{-200*k},{2*k} {-30*k},{-1*k}" fill="none" stroke="#777" stroke-width=".8"/>',
+             f'<rect x="{-454*k}" y="{-11*k}" width="{14*k}" height="{22*k}" rx="2" fill="none" stroke="#e8e8e8" stroke-width=".9"/>',
+             f'<ellipse cx="{-461*k}" cy="0" rx="{7*k}" ry="{30*k}" fill="#000" stroke="#e8e8e8" stroke-width="1.2"/>',
+             f'<path d="M{-468*k},{-13*k}L{-610*k},{-11*k}Q{-616*k},0 {-610*k},{11*k}L{-468*k},{13*k}Z" fill="#000" stroke="#e8e8e8" stroke-width="1.1"/>']
+        for i in range(7):
+            cx = (-484 - i * 18.5) * k
+            o.append(f'<path d="M{f(cx-7.5*k)},0L{f(cx)},{f(-9*k)}L{f(cx+7.5*k)},0L{f(cx)},{f(9*k)}Z" fill="none" stroke="#bdbdbd" stroke-width=".8"/>')
+        return "".join(o)
 
+    o = [f'<path d="{blade}" fill="#fff"/>']
+    # the flat between ridge and back: one hard black reflection band, broken where the light hits
+    band = lambda x0, x1: (f"M{x0},-9.6Q{(x0 + x1) / 2},{-10.4} {x1},{-8.2}"
+                           f"L{x1},{-4.4}Q{(x0 + x1) / 2},{-5.6} {x0},{-4.6}Z")
+    o.append(f'<path d="{band(-436, -250)}{band(-214, -150)}{band(-128, -44)}" fill="#0a0a0a"/>')
+    o.append(f'<path d="M-420,-7.2Q-330,-8 -262,-7.4M-200,-7.6L-160,-7.4" stroke="#fff" stroke-width=".9" fill="none"/>')
+    # ridge line, yokote and the hamon with its frosted edge
+    o.append('<path d="M-440,-3.6Q-200,-5 -36,-5.2M-36,-8.6L-31,5.6" fill="none" stroke="#000" stroke-width="1.1"/>')
+    ham = [(x, 3.6 - 1.7 * math.sin(x / 9.5) - .9 * math.sin(x / 3.7)) for x in range(-436, -38, 3)]
+    o.append(f'<path d="M{pts(ham)}" fill="none" stroke="#000" stroke-width=".9"/>')
+    o.append('<path d="M-30,-1Q-16,-2 -6,-2.6" fill="none" stroke="#000" stroke-width=".8"/>')
+    o.append('<path d="M-430,8.2Q-200,10 -36,5.4" fill="none" stroke="#fff" stroke-width="1.2" opacity=".9"/>')
+    o.append(f'<path d="{blade}" fill="none" stroke="#000" stroke-width="1.8" stroke-linejoin="round"/>')
+    # star glints on the steel
+    for gx, gy, r in ((-318, -1, 13), (-96, -4, 9)):
+        o.append(f'<path d="M{gx},{gy - r}Q{gx + 1},{gy - 1} {gx + r * 1.6},{gy}Q{gx + 1},{gy + 1} {gx},{gy + r}Q{gx - 1},{gy + 1} {gx - r * 1.6},{gy}Q{gx - 1},{gy - 1} {gx},{gy - r}Z" fill="#fff" stroke="#000" stroke-width=".7"/>')
+    # habaki, hatched; seppa washers; a pierced guard seen nearly edge-on
+    o.append('<rect x="-456" y="-11.5" width="16" height="23" fill="#fff" stroke="#000" stroke-width="1.5"/>')
+    o.append('<path d="M-453,-11.5l6,23M-447,-11.5l6,23M-456,-4h16" stroke="#000" stroke-width=".9"/>')
+    o.append('<rect x="-460" y="-14" width="4" height="28" fill="#fff" stroke="#000" stroke-width="1.1"/><rect x="-475" y="-14" width="4" height="28" fill="#fff" stroke="#000" stroke-width="1.1"/>')
+    o.append('<ellipse cx="-465.5" cy="0" rx="7" ry="36" fill="#0a0a0a" stroke="#000" stroke-width="1.5"/>')
+    o.append('<path d="M-462.5,-33Q-460,0 -462.5,33" fill="none" stroke="#fff" stroke-width="1.4"/>')
+    o.append('<path d="M-468,-24q3,5 0,10q-3,-5 0,-10ZM-468,14q3,5 0,10q-3,-5 0,-10Z" fill="#fff"/>')
+    # fuchi, then the hilt: white same-skin diamonds under a black braided wrap
+    o.append('<rect x="-486" y="-13.5" width="11" height="27" fill="#0a0a0a" stroke="#000" stroke-width="1.2"/><path d="M-483,-12v24" stroke="#fff" stroke-width="1"/>')
+    o.append('<path d="M-486,-13Q-550,-14.5 -612,-12L-612,12Q-550,14.5 -486,13Z" fill="#0a0a0a" stroke="#000" stroke-width="1.6"/>')
+    for i in range(7):
+        cx = -497 - i * 16.6
+        o.append(f'<path d="M{f(cx - 6.6)},0L{f(cx)},-9.6L{f(cx + 6.6)},0L{f(cx)},9.6Z" fill="#f6f6f6" stroke="#000" stroke-width=".8"/>')
+        o.append(f'<path d="M{f(cx - 9.4)},0L{f(cx)},-13L{f(cx + 9.4)},0L{f(cx)},13Z" fill="none" stroke="#fff" stroke-width=".8" opacity=".5"/>')
+        o.append(f'<path d="M{f(cx + 8.3)},-12.6L{f(cx + 1.6)},-2.4M{f(cx - 8.3)},12.6L{f(cx - 1.6)},2.4" stroke="#fff" stroke-width="1.1" opacity=".7"/>')
+    o.append('<path d="M-560,-5q6,-6 12,0q6,6 12,0" fill="none" stroke="#fff" stroke-width="2.2"/><path d="M-560,-5q6,-6 12,0q6,6 12,0" fill="none" stroke="#000" stroke-width=".8"/>')
+    o.append('<path d="M-612,-12.5Q-624,-12 -625,0Q-624,12 -612,12.5Z" fill="#0a0a0a" stroke="#000" stroke-width="1.4"/>')
+    o.append('<path d="M-616,-8Q-621,0 -616,8" fill="none" stroke="#fff" stroke-width="1.3"/><circle cx="-619" cy="0" r="1.8" fill="#fff"/>')
+    return "".join(o)
 
 # ---------------------------------------------------------------- what's underneath
 
@@ -238,10 +363,10 @@ def build(total, weeks):
     lpoly, lrim = piece(edge, -1)
     rpoly, rrim = piece(edge, +1)
     s0, s1 = -40, _L + 680
-    p0, p1 = along(s0), along(s1)
+    mid = along(_L * .48)
 
     debris, dcss = [], []
-    for i in range(16):
+    for i in range(18):
         s = rnd.uniform(40, _L - 60)
         x, y = along(s)
         side = rnd.choice([-1, 1])
@@ -254,8 +379,8 @@ def build(total, weeks):
                     f".db{i}{{animation:d{i} {f(rnd.uniform(1.1, 1.6))}s cubic-bezier(.3,.1,.7,1) {f(TS + .1 + rnd.uniform(0, .25))}s both}}")
         debris.append(f'<path class="db{i}" d="M{pts(shape)}Z" fill="#ecebe6"/>')
 
-    lo, ro = (300, 340), (900, 340)
-    q = [0, .45, .52, 1]  # how far down the cut the tip is at each stop: enter, slow motion, out
+    # the fall: enter, slow motion across the page, then gone
+    q = [0, .45, .52, 1]
     at = ["0%", "28%", "82%", "100%"]
     ease = ["cubic-bezier(.25,.6,.35,1)", "linear", "cubic-bezier(.6,0,1,.55)", ""]
 
@@ -264,66 +389,85 @@ def build(total, weeks):
     pos = [along(s0 + (s1 - s0) * v) for v in q]
     fall = "".join(stop(i, f"transform:translate({f(x)}px,{f(y)}px) rotate({ANGLE:.2f}deg)") for i, (x, y) in enumerate(pos))
     slit = "".join(stop(i, f"stroke-dashoffset:{1 - v:.3f}") for i, v in enumerate(q))
+    p0, p1 = along(s0), along(s1)
+
+    # the delayed cut: the right half slides down the line, holds, then tears away
+    rd = TS + 1.4 - SLIDE
+    pc = lambda t: f"{(t - SLIDE) / rd * 100:.1f}%"
+    sx, sy = U[0] * 16, U[1] * 16
+    lo, ro = (300, 340), (900, 340)
     css = f"""
-.sword{{animation:fall 2.3s .3s both}}
-@keyframes fall{{{fall}}}
-.trail{{animation:trail 2.3s .3s both}}
-@keyframes trail{{0%{{opacity:0}}18%{{opacity:.5}}30%{{opacity:.1}}36%,82%{{opacity:0}}100%{{opacity:.9}}}}
-.slit{{stroke-dasharray:1;animation:slit 2.3s .3s both,hide .1s linear {TS + .02}s both}}
-@keyframes slit{{{slit}}}
 @keyframes hide{{from{{opacity:1}}to{{opacity:0}}}}
-.bglint{{animation:bglint 1.1s cubic-bezier(.4,0,.6,1) 1s both}}
+.sword{{animation:fall {FALL_DUR}s {FALL}s both}}
+@keyframes fall{{{fall}}}
+.trail{{animation:trail {FALL_DUR}s {FALL}s both}}
+@keyframes trail{{0%{{opacity:0}}18%{{opacity:.5}}30%{{opacity:.1}}36%,82%{{opacity:0}}92%{{opacity:.9}}100%{{opacity:0}}}}
+.pl{{animation:pl {FALL_DUR}s {FALL}s both}}
+@keyframes pl{{0%{{opacity:0}}10%{{opacity:.75}}28%{{opacity:.15}}34%,82%{{opacity:0}}92%{{opacity:.9}}100%{{opacity:0}}}}
+.slit{{stroke-dasharray:1;animation:slit {FALL_DUR}s {FALL}s both,hide .05s linear {SLIDE}s forwards}}
+@keyframes slit{{{slit}}}
+.bglint{{animation:bglint 1.1s cubic-bezier(.4,0,.6,1) {FALL + .75}s both}}
 @keyframes bglint{{from{{transform:translateX(0)}}to{{transform:translateX(560px)}}}}
 .glint{{animation:glint .5s ease-out .05s both}}
 @keyframes glint{{0%{{transform:scale(0) rotate(0);opacity:0}}50%{{transform:scale(1) rotate(45deg);opacity:1}}100%{{transform:scale(0) rotate(90deg);opacity:0}}}}
+.impact{{opacity:0;animation:imp .3s steps(1) {IMP}s forwards}}
+@keyframes imp{{0%{{opacity:1}}27%{{opacity:0}}47%{{opacity:1}}73%,100%{{opacity:0}}}}
+.kira{{opacity:0;animation:kira .3s steps(1) {IMP}s forwards}}
+@keyframes kira{{0%{{opacity:0}}27%{{opacity:1}}47%,100%{{opacity:0}}}}
+.shake{{animation:shake .45s steps(1) {IMP}s both}}
+@keyframes shake{{0%{{transform:translate(-8px,5px)}}18%{{transform:translate(7px,-6px)}}36%{{transform:translate(-5px,-2px)}}54%{{transform:translate(3px,3px)}}72%{{transform:translate(-1px,1px)}}90%,100%{{transform:translate(0,0)}}}}
 .lp{{transform-origin:{lo[0]}px {lo[1]}px;animation:lp 1.35s {TS}s both}}
-.rp{{transform-origin:{ro[0]}px {ro[1]}px;animation:rp 1.4s {TS}s both}}
 @keyframes lp{{0%{{transform:translate(0,0);animation-timing-function:cubic-bezier(.2,.8,.3,1)}}
 6%{{transform:translate(-3px,0);animation-timing-function:cubic-bezier(.3,0,.3,1)}}
 30%{{transform:translate(-48px,14px) rotate(-3.5deg) scale(1.02);animation-timing-function:cubic-bezier(.5,0,1,.6)}}
 100%{{transform:translate(-460px,1500px) rotate(-20deg) scale(1.04)}}}}
-@keyframes rp{{0%{{transform:translate(0,0);animation-timing-function:cubic-bezier(.2,.8,.3,1)}}
-6%{{transform:translate(3px,0);animation-timing-function:cubic-bezier(.3,0,.3,1)}}
-30%{{transform:translate(56px,8px) rotate(3deg) scale(1.02);animation-timing-function:cubic-bezier(.5,0,1,.6)}}
+.rp{{transform-origin:{ro[0]}px {ro[1]}px;animation:rp {rd:.2f}s {SLIDE}s both}}
+@keyframes rp{{0%{{transform:translate(0,0);animation-timing-function:cubic-bezier(.2,.7,.2,1)}}
+{pc(SLIDE + .2)}{{transform:translate({f(sx)}px,{f(sy)}px)}}
+{pc(TS)}{{transform:translate({f(sx)}px,{f(sy)}px);animation-timing-function:cubic-bezier(.2,.8,.3,1)}}
+{pc(TS + .084)}{{transform:translate({f(sx + 3)}px,{f(sy)}px);animation-timing-function:cubic-bezier(.3,0,.3,1)}}
+{pc(TS + .42)}{{transform:translate({f(sx + 56)}px,{f(sy + 8)}px) rotate(3deg) scale(1.02);animation-timing-function:cubic-bezier(.5,0,1,.6)}}
 100%{{transform:translate(480px,1480px) rotate(16deg) scale(1.04)}}}}
-.whole{{animation:hide .01s linear {TS}s both}}
-.rim{{animation:hide .12s linear {TS + .02}s reverse both}}
-.shake{{animation:shake .35s steps(1) {TS}s both}}
-@keyframes shake{{0%{{transform:translate(-4px,2px)}}25%{{transform:translate(3px,-3px)}}50%{{transform:translate(-2px,-1px)}}75%,100%{{transform:translate(0,0)}}}}
+.whole{{animation:hide .01s linear {SLIDE}s both}}
+.rim{{animation:hide .1s linear {SLIDE}s reverse both}}
 .bar{{animation:grow .55s cubic-bezier(.2,.8,.2,1) both}}
 @keyframes grow{{from{{transform:scaleY(0)}}to{{transform:scaleY(1)}}}}
 .peak{{animation:hide .5s ease-out {TS + 1.8}s reverse both}}
 .grain{{animation:grain .6s steps(1) infinite}}
 @keyframes grain{{0%{{transform:translate(0,0)}}33%{{transform:translate(-30px,14px)}}66%{{transform:translate(20px,-24px)}}}}
 {"".join(dcss)}
-@media (prefers-reduced-motion:reduce){{.paper,.sword,.trail,.slit,.glint,[class^=db]{{display:none}}.bar,.peak{{animation:none}}}}"""
+@media (prefers-reduced-motion:reduce){{.paper,.sword,.slit,.glint,.impact,.kira,.pl,[class^=db]{{display:none}}.bar,.peak{{animation:none}}}}"""
 
     gx = along(4)[0]
     defs = f"""<defs>
-<linearGradient id="steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f4f4"/><stop offset=".45" stop-color="#a2a2a2"/><stop offset=".62" stop-color="#cdcdcd"/><stop offset="1" stop-color="#fff"/></linearGradient>
-<linearGradient id="streak" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#111" stop-opacity="0"/><stop offset="1" stop-color="#111" stop-opacity=".35"/></linearGradient>
+<linearGradient id="streak" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".4"/></linearGradient>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<linearGradient id="barfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9e9e9"/><stop offset="1" stop-color="#5a5a5a"/></linearGradient>
 <filter id="wash" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".012 .09" numOctaves="3" seed="3"/><feColorMatrix values="0 0 0 0 .55  0 0 0 0 .55  0 0 0 0 .52  0 0 0 -.9 .55"/></filter>
 <filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="5" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .8 0"/></filter>
 <clipPath id="bclip"><path d="M-440,-9Q-200,-11 -30,-8L0,-3Q-14,4 -32,6Q-200,11 -440,9Z"/></clipPath>
-<linearGradient id="bg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
-<linearGradient id="barfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9e9e9"/><stop offset="1" stop-color="#5a5a5a"/></linearGradient>
 <clipPath id="lc"><path d="M{pts(lpoly)}Z"/></clipPath><clipPath id="rc"><path d="M{pts(rpoly)}Z"/></clipPath>
 <g id="sheet">{paper()}</g>
 </defs>"""
 
+    specks = "".join(f'<circle cx="{f(mid[0] + math.cos(a) * r)}" cy="{f(mid[1] + math.sin(a) * r * .8)}" r="{f(rnd.uniform(1.2, 3.4))}" fill="#fff"/>'
+                     for a, r in ((rnd.uniform(0, 6.3), rnd.uniform(120, 420)) for _ in range(40)))
     body = f"""{underneath(total, weeks)}
 <rect class="grain" x="-40" y="-40" width="{W + 80}" height="{H + 80}" filter="url(#grain)" opacity=".05"/>
 <g class="paper shake">
 <use class="whole" href="#sheet"/>
 <g class="lp"><g clip-path="url(#lc)"><use href="#sheet"/></g><g class="rim">{lrim}</g></g>
 <g class="rp"><g clip-path="url(#rc)"><use href="#sheet"/></g><g class="rim">{rrim}</g></g>
-<path class="slit" pathLength="1" d="M{f(p0[0])},{f(p0[1])}L{f(p1[0])},{f(p1[1])}" stroke="#0a0a0a" stroke-width="2.2"/>
+<path class="slit" pathLength="1" d="M{f(p0[0])},{f(p0[1])}L{f(p1[0])},{f(p1[1])}" stroke="#000" stroke-width="2.4"/>
+<g class="pl">{path_lines(46, "#111")}</g>
 </g>
 {"".join(debris)}
 <g class="glint" style="transform-origin:{f(gx)}px 8px"><path d="M{f(gx)},-18Q{f(gx+3)},5 {f(gx+26)},8Q{f(gx+3)},11 {f(gx)},34Q{f(gx-3)},11 {f(gx-26)},8Q{f(gx-3)},5 {f(gx)},-18Z" fill="#111"/></g>
-<g class="sword"><rect class="trail" x="-1100" y="-6" width="480" height="12" fill="url(#streak)"/>{katana()}<g clip-path="url(#bclip)"><rect class="bglint" x="-560" y="-14" width="90" height="28" fill="url(#bg)"/></g></g>"""
+<g class="sword"><rect class="trail" x="-1100" y="-6" width="480" height="12" fill="url(#streak)"/>{katana()}<g clip-path="url(#bclip)"><rect class="bglint" x="-560" y="-14" width="90" height="28" fill="url(#bg)"/></g></g>
+<g class="impact"><rect x="-20" y="-20" width="{W + 40}" height="{H + 40}" fill="#000"/>{focus(mid[0], mid[1], 300, 190, 190, "#fff")}{slash(22, "#fff", 3)}{starburst(mid[0], mid[1], 16, 170, 26, "#fff")}{specks}</g>
+<g class="kira"><rect x="-20" y="-20" width="{W + 40}" height="{H + 40}" fill="#fff"/>{slash(9, "#000", 1)}{starburst(mid[0], mid[1], 10, 120, 22, "none", "#000")}</g>"""
 
-    alt = f"Atharva Lakhe. A katana falls and cuts a sheet of paper, which tears away to show {total:,} contributions in the last year."
+    alt = f"Atharva Lakhe. A katana falls through an ink-brushed page, cuts it, and the page tears away to show my details and {total:,} contributions in the last year."
     fonts = font("N", "mincho-xb.ttf") + font("S", "mincho-md.ttf") + font("K", "yuji.ttf")
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" aria-label="{esc(alt)}">'
             f"<style>{fonts}{css}</style>{defs}{body}</svg>")
