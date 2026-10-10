@@ -245,7 +245,7 @@ def build(total, weeks):
         s = rnd.uniform(40, _L - 60)
         x, y = along(s)
         side = rnd.choice([-1, 1])
-        dx, dy = N[0] * side * rnd.uniform(40, 160), rnd.uniform(380, 640)
+        dx, dy = N[0] * side * rnd.uniform(40, 160), H + 40 - y + rnd.uniform(0, 200)
         sz = rnd.uniform(3, 8)
         shape = [(rnd.uniform(-sz, sz), rnd.uniform(-sz, sz)) for _ in range(4)]
         dcss.append(f"@keyframes d{i}{{0%{{transform:translate({f(x)}px,{f(y)}px) rotate(0) scale(.3);opacity:0}}"
