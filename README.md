@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="katana/katana.svg" width="100%" alt="Atharva Lakhe. A katana is drawn in a flash, an anime slash splits the frame, and the blade returns to its sheath.">
+  <img src="katana/banner.svg" width="100%" alt="Atharva Lakhe. A katana falls and cuts a sheet of paper, which tears away to show my details and a year of contributions.">
 </p>
 
 <p align="center">
