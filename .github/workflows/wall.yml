@@ -1,0 +1,53 @@
+name: Paint the wall
+
+on:
+  issues:
+    types: [opened]
+
+concurrency:
+  group: wall
+  cancel-in-progress: false
+
+jobs:
+  paint:
+    if: startsWith(github.event.issue.title, 'paint') || startsWith(github.event.issue.title, 'Paint')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Paint
+        id: paint
+        env:
+          TITLE: ${{ github.event.issue.title }}
+          PAINTER: ${{ github.event.issue.user.login }}
+        run: |
+          git pull --ff-only
+          if python wall/paint.py paint "$TITLE" "$PAINTER" > reply.md; then echo "ok=true" >> "$GITHUB_OUTPUT"; fi
+          cat reply.md
+
+      - name: Commit the wall
+        if: steps.paint.outputs.ok == 'true'
+        env:
+          PAINTER: ${{ github.event.issue.user.login }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add wall README.md
+          git commit -m "wall: a square from @$PAINTER (#${{ github.event.issue.number }})"
+          git push
+
+      - name: Reply and close
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh issue comment "$NUMBER" --repo "$GITHUB_REPOSITORY" --body-file reply.md
+          gh issue close "$NUMBER" --repo "$GITHUB_REPOSITORY"
