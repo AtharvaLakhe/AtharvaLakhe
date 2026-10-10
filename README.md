@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="katana/banner.svg" width="100%" alt="Atharva Lakhe. A katana falls and cuts a sheet of paper, which tears away to show my details and a year of contributions.">
+  <picture>
+    <source media="(max-width: 700px)" srcset="katana/banner-mobile.svg">
+    <img src="katana/banner.svg" width="100%" alt="Atharva Lakhe. A katana falls and cuts an ink-brushed page, which tears away to show my details and a year of contributions.">
+  </picture>
 </p>
 
 <p align="center">
