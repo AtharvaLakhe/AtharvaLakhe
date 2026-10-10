@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="wall/wall.svg?v=18" width="100%" alt="Atharva's pixel wall. Anyone can paint one square at a time.">
+<img src="wall/wall.svg?v=17" width="100%" alt="Atharva's pixel wall. Anyone can paint one square at a time.">
 
 <h3>Paint a square on my wall</h3>
 
