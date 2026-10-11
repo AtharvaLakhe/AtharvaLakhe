@@ -310,6 +310,115 @@ def katana(scale=1.0, line=False):
     o.append('<path d="M-616,-8Q-621,0 -616,8" fill="none" stroke="#fff" stroke-width="1.3"/><circle cx="-619" cy="0" r="1.8" fill="#fff"/>')
     return "".join(o)
 
+def katana_ink(x0, x1, cy, t):
+    """A horizontal katana inked like a manga panel: hard black lines with a white rim,
+    flat grey steel with a light back and a white edge bevel, scratches and chips,
+    an angular guard with a side face, and a coil-wrapped grip. Tip at x1."""
+    k = random.Random(7)
+    L = x1 - x0
+    X = lambda u: x0 + u * L
+    b0 = .262  # where the blade leaves the collar
+
+    def mune(u):
+        v = (u - b0) / (1 - b0)
+        return cy - t / 2 - t * .45 * v ** 2
+
+    def edge(u):
+        v = (u - b0) / (1 - b0)
+        return cy + t / 2 - t * .45 * v ** 2 - t * .3 * v ** 7
+
+    us = [b0 + (.968 - b0) * i / 80 for i in range(81)]
+    tip = (x1, mune(.968) + t * .32)
+    top = [(X(u), mune(u)) for u in us]
+    bot = [(X(u), edge(u)) for u in us]
+    blade = top + [tip] + bot[::-1]
+    lvl = lambda u, a: mune(u) + (edge(u) - mune(u)) * a  # a point a fraction of the way from back to edge
+    band = lambda a0, a1: [(X(u), lvl(u, a0)) for u in us] + [(X(u), lvl(u, a1)) for u in reversed(us)]
+    o = [f'<path d="M{pts(blade)}Z" fill="none" stroke="#ededed" stroke-width="6" stroke-linejoin="round"/>',
+         f'<path d="M{pts(blade)}Z" fill="#8b8b8b"/>',
+         f'<path d="M{pts(band(0, .2))}Z" fill="#c4c4c4"/>',                      # the back, catching light
+         f'<path d="M{pts(band(.2, .46))}Z" fill="#666"/>',                        # the flat above the ridge, in shadow
+         f'<path d="M{pts(band(.2, .46))}Z" fill="url(#inktone)" opacity=".55"/>']
+    ham = [(X(u), lvl(u, .74 + .05 * math.sin(u * 300) + .03 * math.sin(u * 820))) for u in [b0 + (.962 - b0) * i / 220 for i in range(221)]]
+    o.append(f'<path d="M{pts(ham + bot[::-1])}Z" fill="#e2e2e2"/>')              # the white edge bevel
+    o.append(f'<path d="M{pts(ham)}" fill="none" stroke="#111" stroke-width="1"/>')
+    o.append(f'<path d="M{pts([(X(u), lvl(u, .2)) for u in us])}" fill="none" stroke="#111" stroke-width="1"/>')
+    o.append(f'<path d="M{pts([(X(u), lvl(u, .46)) for u in us])}" fill="none" stroke="#111" stroke-width="1.3"/>')
+    # wear: scratches along the steel, white nicks, hatching in the shadowed flat
+    marks = []
+    for _ in range(70):
+        u = k.uniform(b0 + .02, .93)
+        y = lvl(u, k.uniform(.08, .92))
+        ln = k.uniform(4, 22)
+        marks.append(f"M{f(X(u))},{f(y)}l{f(ln)},{f(k.uniform(-1.6, 1.6))}")
+    o.append(f'<path d="{"".join(marks)}" stroke="#1d1d1d" stroke-width=".7" opacity=".75" fill="none"/>')
+    specks = []
+    for _ in range(40):
+        u = k.uniform(b0 + .02, .94)
+        y = lvl(u, k.uniform(.05, .95))
+        specks.append(f"M{f(X(u))},{f(y)}l{f(k.uniform(2, 9))},{f(k.uniform(-.8, .8))}")
+    o.append(f'<path d="{"".join(specks)}" stroke="#f4f4f4" stroke-width=".8" opacity=".8" fill="none"/>')
+    hatch = []
+    for i in range(int(L * .7 / 7)):
+        u = b0 + .01 + i * 7 / L
+        if u > .9:
+            break
+        y0, y1 = lvl(u, .22), lvl(u, .44)
+        hatch.append(f"M{f(X(u))},{f(y1)}L{f(X(u) + (y1 - y0) * .8)},{f(y0)}")
+    o.append(f'<path d="{"".join(hatch)}" stroke="#2a2a2a" stroke-width=".6" opacity=".6"/>')
+    for u in (.41, .58, .77):  # small chips in the edge
+        xx, yy = X(u), edge(u)
+        o.append(f'<path d="M{f(xx - 3)},{f(yy + .5)}L{f(xx)},{f(yy - t * .14)}L{f(xx + 3.5)},{f(yy + .5)}Z" fill="#0b0b0b"/>')
+    o.append(f'<path d="M{pts(blade)}Z" fill="none" stroke="#050505" stroke-width="2.4" stroke-linejoin="round"/>')
+    o.append(f'<path d="M{f(X(.968))},{f(mune(.968))}L{f(X(.958))},{f(edge(.958))}" stroke="#050505" stroke-width="1.4"/>')
+    gx, gy = X(.8), lvl(.8, .55)
+    o.append(f'<path d="M{f(gx)},{f(gy - t * .7)}Q{f(gx + 1)},{f(gy - 1)} {f(gx + t * 1.1)},{f(gy)}Q{f(gx + 1)},{f(gy + 1)} {f(gx)},{f(gy + t * .7)}'
+             f'Q{f(gx - 1)},{f(gy + 1)} {f(gx - t * 1.1)},{f(gy)}Q{f(gx - 1)},{f(gy - 1)} {f(gx)},{f(gy - t * .7)}Z" fill="#fff"/>')
+    o.append(f'<rect class="hdglint" x="{f(X(b0))}" y="{f(cy - t)}" width="{f(L * .06)}" height="{f(t * 2)}" fill="url(#bg)" opacity=".6" clip-path="url(#hdclip)"/>')
+    o.append(f'<clipPath id="hdclip"><path d="M{pts(blade)}Z"/></clipPath>')
+
+    # collar, washers and an angular guard with its side face showing
+    hb0, hb1 = X(.247), X(b0)
+    o.append(f'<path d="M{f(hb0)},{f(cy - t * .66)}H{f(hb1)}V{f(cy + t * .66)}H{f(hb0)}Z" fill="#a9a9a9" stroke="#ededed" stroke-width="5"/>')
+    o.append(f'<path d="M{f(hb0)},{f(cy - t * .66)}H{f(hb1)}V{f(cy + t * .66)}H{f(hb0)}Z" fill="#a9a9a9" stroke="#050505" stroke-width="2"/>')
+    o.append("".join(f'<path d="M{f(hb0 + i * (hb1 - hb0) / 5)},{f(cy - t * .66)}l{f(t * .45)},{f(t * 1.32)}" stroke="#222" stroke-width=".8"/>' for i in range(5)))
+    o.append(f'<path d="M{f(hb0 + 1.5)},{f(cy - t * .58)}H{f(hb1 - 1.5)}" stroke="#fff" stroke-width="1.2"/>')
+    gx0, gw, gh, depth = X(.231), t * .5, t * 1.75, t * .38
+    face = [(gx0, cy - gh * .72), (gx0 + gw * .35, cy - gh), (gx0 + gw, cy - gh), (gx0 + gw, cy + gh), (gx0 + gw * .35, cy + gh), (gx0, cy + gh * .72)]
+    side = [(gx0 + gw, cy - gh), (gx0 + gw + depth, cy - gh + depth * .5), (gx0 + gw + depth, cy + gh - depth * .5), (gx0 + gw, cy + gh)]
+    for shape, fill in ((side, "#3c3c3c"), (face, "#9a9a9a")):
+        o.append(f'<path d="M{pts(shape)}Z" fill="{fill}" stroke="#ededed" stroke-width="5" stroke-linejoin="round"/>')
+        o.append(f'<path d="M{pts(shape)}Z" fill="{fill}" stroke="#050505" stroke-width="2.2" stroke-linejoin="round"/>')
+    o.append(f'<path d="M{f(gx0 + 2.5)},{f(cy - gh * .66)}L{f(gx0 + gw * .4)},{f(cy - gh + 3)}" stroke="#fff" stroke-width="1.6"/>')
+    o.append(f'<path d="M{f(gx0 + gw * .55)},{f(cy - gh * .55)}v{f(gh * .32)}M{f(gx0 + gw * .55)},{f(cy + gh * .23)}v{f(gh * .32)}" stroke="#1a1a1a" stroke-width="{f(gw * .28)}" stroke-linecap="round"/>')
+    o.append(f'<path d="M{f(gx0 + gw + depth * .5)},{f(cy - gh * .8)}V{f(cy + gh * .8)}" stroke="#777" stroke-width=".8"/>')
+
+    # fuchi, then the grip: a tight coil of cord, each ring catching light on its top edge
+    f0, f1 = X(.214), X(.233)
+    o.append(f'<path d="M{f(f0)},{f(cy - t * .78)}H{f(f1)}V{f(cy + t * .78)}H{f(f0)}Z" fill="#2a2a2a" stroke="#ededed" stroke-width="5"/>')
+    o.append(f'<path d="M{f(f0)},{f(cy - t * .78)}H{f(f1)}V{f(cy + t * .78)}H{f(f0)}Z" fill="#2a2a2a" stroke="#050505" stroke-width="2"/>')
+    o.append(f'<path d="M{f(f0 + 2)},{f(cy - t * .66)}H{f(f1 - 2)}" stroke="#bbb" stroke-width="1.2"/>')
+    g0, g1 = X(.03), X(.214)
+    grip = f"M{f(g0)},{f(cy - t * .62)}Q{f((g0 + g1) / 2)},{f(cy - t * .74)} {f(g1)},{f(cy - t * .7)}V{f(cy + t * .7)}Q{f((g0 + g1) / 2)},{f(cy + t * .74)} {f(g0)},{f(cy + t * .62)}Z"
+    o.append(f'<path d="{grip}" fill="#101010" stroke="#ededed" stroke-width="5"/><path d="{grip}" fill="#101010"/>')
+    step = t * .3
+    n = int((g1 - g0) / step)
+    rings = []
+    for i in range(n):
+        x = g0 + (i + .5) * step
+        hgt = t * (.6 + .1 * math.sin(math.pi * i / n))
+        rings.append(f'<path d="M{f(x)},{f(cy - hgt)}q{f(step * .55)},{f(hgt)} 0,{f(hgt * 2)}" fill="none" stroke="#454545" stroke-width="{f(step * .55)}"/>')
+        rings.append(f'<path d="M{f(x - step * .1)},{f(cy - hgt + 1.5)}q{f(step * .4)},{f(hgt * .35)} {f(step * .3)},{f(hgt * .75)}" fill="none" stroke="#ffffff" stroke-width="1.4"/>')
+    o.append("".join(rings))
+    o.append(f'<path d="{grip}" fill="none" stroke="#050505" stroke-width="2.2"/>')
+    # kashira: an angular end cap
+    cap = [(X(.03), cy - t * .66), (X(.008), cy - t * .55), (x0, cy - t * .25), (x0, cy + t * .25), (X(.008), cy + t * .55), (X(.03), cy + t * .66)]
+    o.append(f'<path d="M{pts(cap)}Z" fill="#9a9a9a" stroke="#ededed" stroke-width="5" stroke-linejoin="round"/>')
+    o.append(f'<path d="M{pts(cap)}Z" fill="#9a9a9a" stroke="#050505" stroke-width="2.2" stroke-linejoin="round"/>')
+    o.append(f'<path d="M{f(X(.026))},{f(cy - t * .5)}L{f(X(.009))},{f(cy - t * .42)}" stroke="#fff" stroke-width="1.4"/>')
+    return "".join(o)
+
+
 def katana_hd(x0, x1, cy, t):
     """A horizontal katana with depth, for the dark page: tip at x1, pommel at x0, blade height t."""
     L = x1 - x0
@@ -443,7 +552,7 @@ def underneath(total, weeks):
         by, gh, fs, sy, sh, ml, foot = 778, 230, 14, 862, 46, 888, 936
 
     o.append(f'<g id="divider"><rect x="{40 if MOBILE else x0}" y="{div[1] - 40}" width="{div[0] - (40 if MOBILE else x0)}" height="80" fill="#050505" opacity="0"/>'
-             f'{katana_hd(40 if MOBILE else x0, div[0], div[1], 11 if MOBILE else 15)}</g>')
+             f'{katana_ink(40 if MOBILE else x0, div[0], div[1], 15 if MOBILE else 21)}</g>')
 
     # the year as a 3D ink skyline: one block per day, rising in week by week
     if MOBILE:
@@ -607,6 +716,7 @@ def build(total, weeks):
 <linearGradient id="bg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
 <linearGradient id="ink" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d8d8d8" stop-opacity=".95"/><stop offset=".35" stop-color="#6a6a6a" stop-opacity=".9"/><stop offset="1" stop-color="#0d0d0d" stop-opacity=".9"/></linearGradient>
 <pattern id="ktone" width="3.2" height="3.2" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="1.6" cy="1.6" r=".55" fill="#000"/></pattern>
+<pattern id="inktone" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><circle cx="2" cy="2" r=".8" fill="#000"/></pattern>
 <linearGradient id="hdsteel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8f8f8f"/><stop offset=".3" stop-color="#d9d9d9"/><stop offset=".5" stop-color="#bdbdbd"/><stop offset=".72" stop-color="#ececec"/><stop offset="1" stop-color="#ffffff"/></linearGradient>
 <linearGradient id="hdflat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2e2e2e"/><stop offset="1" stop-color="#6e6e6e"/></linearGradient>
 <linearGradient id="hdmetal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0f0f0"/><stop offset=".45" stop-color="#9a9a9a"/><stop offset="1" stop-color="#4a4a4a"/></linearGradient>
