@@ -310,6 +310,136 @@ def katana(scale=1.0, line=False):
     o.append('<path d="M-616,-8Q-621,0 -616,8" fill="none" stroke="#fff" stroke-width="1.3"/><circle cx="-619" cy="0" r="1.8" fill="#fff"/>')
     return "".join(o)
 
+def katana_v(L, t, rim=False, seed=5):
+    """A katana inked the way Vagabond draws one, in local coordinates: tip at the origin,
+    hilt toward negative x, total length L, blade height t.
+
+    Mirror-polished steel shown as long dark and light reflection streaks, a wavy hamon over a
+    frosted edge, an oval guard turned toward the viewer with a carved dragon among clouds,
+    and a heavy black wrap over pale same-skin diamonds. rim=True adds a pale outline so the
+    sword reads on a black page."""
+    k = random.Random(seed)
+    xb, xh, xt, xf, xk = -.72 * L, -.745 * L, -.762 * L, -.79 * L, -.975 * L
+
+    def curve(x):  # the blade rises gently toward the tip
+        v = (x - xb) / -xb
+        return t * .55 * v * v
+
+    def mune(x):
+        return -t / 2 - curve(x)
+
+    def edge(x):
+        v = (x - xb) / -xb
+        return t / 2 - curve(x) - t * .35 * v ** 9
+
+    xs = [xb + (-.035 * L - xb) * i / 90 for i in range(91)]
+    tip = (0.0, mune(-.035 * L) + t * .3)
+    blade = [(x, mune(x)) for x in xs] + [tip] + [(x, edge(x)) for x in reversed(xs)]
+    lvl = lambda x, a: mune(x) + (edge(x) - mune(x)) * a
+    band = lambda a0, a1: [(x, lvl(x, a0)) for x in xs] + [(x, lvl(x, a1)) for x in reversed(xs)]
+    P = lambda pts_: "M" + pts(pts_) + "Z"
+    o = []
+
+    tsuba = (xt, 0, t * .78, t * 2.05)
+    grip = [(xf, -t * .7), (xk + L * .01, -t * .62), (xk, -t * .5), (xk, t * .5), (xk + L * .01, t * .62), (xf, t * .7)]
+    if rim:  # a pale halo around the whole silhouette
+        o.append(f'<g fill="none" stroke="#d9d9d9" stroke-width="5" stroke-linejoin="round">'
+                 f'<path d="{P(blade)}"/><path d="{P(grip)}"/><rect x="{f(xh)}" y="{f(-t * .7)}" width="{f(xb - xh)}" height="{f(t * 1.4)}"/>'
+                 f'<ellipse cx="{f(tsuba[0])}" cy="0" rx="{f(tsuba[2])}" ry="{f(tsuba[3])}"/></g>')
+
+    # ---- blade: mirror polish as streaks running its length
+    o.append(f'<path d="{P(blade)}" fill="#2e2e2e"/>')
+    o.append(f'<path d="{P(band(0, .13))}" fill="#151515"/>')                     # the back, dark
+    o.append(f'<path d="{P(band(.13, .18))}" fill="#f2f2f2"/>')                   # the highlight along it
+    o.append(f'<path d="{P(band(.21, .46))}" fill="#262626"/>')                   # the flat above the ridge, reflecting dark
+    streaks = []
+    for _ in range(26):
+        a = k.uniform(.24, .44)
+        x0 = k.uniform(xb, -.12 * L)
+        ln = k.uniform(.05, .22) * L
+        w = k.uniform(.6, 1.8)
+        pts_ = [(x, lvl(x, a) + math.sin(x / k.uniform(18, 40)) * .6) for x in [x0 + ln * i / 12 for i in range(13)] if x < -.04 * L]
+        if len(pts_) > 1:
+            streaks.append((pts_, w, k.choice(["#6f6f6f", "#8c8c8c", "#4a4a4a"])))
+    for pts_, w, col in streaks:
+        o.append(f'<path d="M{pts(pts_)}" fill="none" stroke="{col}" stroke-width="{f(w)}" stroke-linecap="round"/>')
+    o.append(f'<path d="M{pts([(x, lvl(x, .46)) for x in xs])}" fill="none" stroke="#fff" stroke-width="1.3"/>')  # ridge catching light
+    # the side of the blade: a dark reflection that wanders, lighter steel around it
+    refl = []
+    for x in xs:
+        v = (x - xb) / -xb
+        refl.append((x, lvl(x, .56 + .06 * math.sin(v * 9 + 1) + .03 * math.sin(v * 31))))
+    refl2 = [(x, lvl(x, .66 + .05 * math.sin((x - xb) / -xb * 7 + 2))) for x in xs]
+    o.append(f'<path d="M{pts(refl + refl2[::-1])}Z" fill="#0e0e0e"/>')
+    mid = [((a[0] + b[0]) / 2, (a[1] + b[1]) / 2) for a, b in zip(refl, refl2)]
+    o.append(f'<path d="M{pts(mid)}" fill="none" stroke="#e8e8e8" stroke-width="1.4"/>')
+    for _ in range(18):
+        a = k.uniform(.5, .74)
+        x0 = k.uniform(xb, -.1 * L)
+        ln = k.uniform(.04, .16) * L
+        pts_ = [(x, lvl(x, a)) for x in [x0 + ln * i / 10 for i in range(11)] if x < -.04 * L]
+        if len(pts_) > 1:
+            o.append(f'<path d="M{pts(pts_)}" fill="none" stroke="{k.choice(["#f0f0f0", "#9a9a9a", "#bdbdbd"])}" stroke-width="{f(k.uniform(.5, 1.3))}"/>')
+    # hamon and the frosted edge below it
+    ham = [(x, lvl(x, .85 + .05 * math.sin((x - xb) / (t * .55)) + .025 * math.sin((x - xb) / (t * .21)))) for x in [xb + (-.05 * L - xb) * i / 260 for i in range(261)]]
+    o.append(f'<path d="M{pts(ham + [(x, edge(x)) for x in reversed(xs) if x <= -.05 * L])}Z" fill="#f7f7f7"/>')
+    o.append(f'<path d="M{pts(ham)}" fill="none" stroke="#1a1a1a" stroke-width="1.1"/>')
+    frost = "".join(f'<circle cx="{f(x)}" cy="{f(lvl(x, k.uniform(.89, .98)))}" r="{f(k.uniform(.25, .6))}" fill="#9a9a9a"/>' for x in [k.uniform(xb, -.06 * L) for _ in range(90)])
+    o.append(frost)
+    # the point: a bright face with one dark reflection
+    yk = -.045 * L
+    o.append(f'<path d="M{f(yk)},{f(mune(yk))}L{f(tip[0])},{f(tip[1])}L{f(yk)},{f(edge(yk))}Z" fill="#ededed"/>')
+    o.append(f'<path d="M{f(yk)},{f(lvl(yk, .3))}L{f(tip[0] - t * .6)},{f(tip[1])}L{f(yk)},{f(lvl(yk, .55))}Z" fill="#2a2a2a"/>')
+    o.append(f'<path d="M{f(yk)},{f(mune(yk))}L{f(yk + 1)},{f(edge(yk))}" stroke="#111" stroke-width="1.2"/>')
+    o.append(f'<path d="{P(blade)}" fill="none" stroke="#050505" stroke-width="1.9" stroke-linejoin="round"/>')
+
+    # ---- habaki and seppa
+    o.append(f'<rect x="{f(xh)}" y="{f(-t * .7)}" width="{f(xb - xh)}" height="{f(t * 1.4)}" fill="#bdbdbd" stroke="#050505" stroke-width="1.6"/>')
+    o.append("".join(f'<path d="M{f(xh + i * (xb - xh) / 5)},{f(-t * .7)}l{f(t * .5)},{f(t * 1.4)}" stroke="#333" stroke-width=".9"/>' for i in range(5)))
+    o.append(f'<path d="M{f(xh + 1)},{f(-t * .55)}H{f(xb - 1)}" stroke="#fff" stroke-width="1.2"/>')
+    for dx in (-t * .9, t * .55):
+        o.append(f'<rect x="{f(xt + dx)}" y="{f(-t * 1.05)}" width="{f(t * .16)}" height="{f(t * 2.1)}" rx="1" fill="#8a8a8a" stroke="#050505" stroke-width="1"/>')
+
+    # ---- tsuba: an oval plate turned toward us, a dragon among clouds carved into it
+    cx, cy, rx, ry = tsuba
+    o.append(f'<ellipse cx="{f(cx + t * .32)}" cy="{f(cy)}" rx="{f(rx)}" ry="{f(ry)}" fill="#0c0c0c" stroke="#050505" stroke-width="1.6"/>')
+    o.append(f'<ellipse cx="{f(cx)}" cy="{f(cy)}" rx="{f(rx)}" ry="{f(ry)}" fill="#1f1f1f" stroke="#050505" stroke-width="2"/>')
+    o.append(f'<ellipse cx="{f(cx)}" cy="{f(cy)}" rx="{f(rx * .84)}" ry="{f(ry * .9)}" fill="none" stroke="#5c5c5c" stroke-width="1"/>')
+    body = [(cx + rx * .55 * math.sin(a * 2.2), cy - ry * .78 + ry * 1.56 * (a / math.pi)) for a in [i * math.pi / 40 for i in range(41)]]
+    o.append(f'<path d="M{pts(body)}" fill="none" stroke="#b5b5b5" stroke-width="{f(t * .2)}" stroke-linecap="round"/>')
+    o.append(f'<path d="M{pts(body)}" fill="none" stroke="#2a2a2a" stroke-width="{f(t * .06)}" stroke-dasharray="1.5 2.5"/>')
+    hx, hy = body[0]
+    o.append(f'<path d="M{f(hx)},{f(hy)}l{f(rx * .35)},{f(-ry * .08)}l{f(-rx * .1)},{f(ry * .1)}M{f(hx)},{f(hy)}l{f(-rx * .25)},{f(-ry * .1)}" stroke="#c9c9c9" stroke-width="1.2" fill="none"/>')
+    for sx, sy in ((cx - rx * .45, cy + ry * .45), (cx + rx * .4, cy - ry * .35), (cx - rx * .35, cy - ry * .55)):
+        o.append(f'<path d="M{f(sx)},{f(sy)}a{f(rx * .13)},{f(ry * .05)} 0 1 1 {f(rx * .16)},{f(ry * .02)}a{f(rx * .08)},{f(ry * .03)} 0 1 1 {f(rx * .1)},{f(ry * .015)}" fill="none" stroke="#8c8c8c" stroke-width="1"/>')
+    o.append(f'<path d="M{f(cx - rx * .78)},{f(cy - ry * .5)}A{f(rx)},{f(ry)} 0 0 1 {f(cx - rx * .15)},{f(cy - ry * .97)}" fill="none" stroke="#f0f0f0" stroke-width="1.6"/>')
+    o.append(f'<path d="M{f(cx - rx * .92)},{f(cy + ry * .1)}A{f(rx)},{f(ry)} 0 0 0 {f(cx - rx * .5)},{f(cy + ry * .82)}" fill="none" stroke="#9a9a9a" stroke-width="1.1"/>')
+    o.append(f'<ellipse cx="{f(cx)}" cy="{f(cy)}" rx="{f(t * .14)}" ry="{f(t * .55)}" fill="#050505"/>')
+
+    # ---- fuchi, the wrapped grip, menuki and kashira
+    o.append(f'<rect x="{f(xf)}" y="{f(-t * .76)}" width="{f(xt - t * .9 - xf)}" height="{f(t * 1.52)}" fill="#1a1a1a" stroke="#050505" stroke-width="1.6"/>')
+    o.append(f'<path d="M{f(xf + 2)},{f(-t * .62)}H{f(xt - t * .9 - 2)}" stroke="#a8a8a8" stroke-width="1.1"/>')
+    o.append(f'<path d="{P(grip)}" fill="#0b0b0b"/>')
+    n = 9
+    w = (xf - (xk + L * .012)) / n
+    for i in range(n):
+        dcx = xk + L * .012 + w * (i + .5)
+        hw, hh = w * .34, t * .44
+        o.append(f'<path d="M{f(dcx - hw)},0L{f(dcx)},{f(-hh)}L{f(dcx + hw)},0L{f(dcx)},{f(hh)}Z" fill="#c9c9c9"/>')
+        o.append(f'<path d="M{f(dcx - hw * .55)},{f(-hh * .2)}L{f(dcx)},{f(-hh * .78)}" stroke="#f2f2f2" stroke-width="1"/>')
+        for sgn in (-1, 1):  # the cord crossing over, light along its upper edge
+            o.append(f'<path d="M{f(dcx - w / 2)},{f(sgn * t * .68)}L{f(dcx - hw * .15)},{f(sgn * hh * .1)}" stroke="#4d4d4d" stroke-width="1.2"/>')
+            o.append(f'<path d="M{f(dcx + w / 2)},{f(sgn * t * .68)}L{f(dcx + hw * .15)},{f(sgn * hh * .1)}" stroke="#2e2e2e" stroke-width="1"/>')
+    mx = xk + (xf - xk) * .52
+    o.append(f'<path d="M{f(mx - w * .9)},{f(t * .05)}q{f(w * .45)},{f(-t * .5)} {f(w * .9)},0q{f(w * .45)},{f(t * .5)} {f(w * .9)},0" fill="none" stroke="#7d7d7d" stroke-width="{f(t * .08)}" stroke-linecap="round" opacity=".8"/>')
+    o.append(f'<path d="{P(grip)}" fill="none" stroke="#050505" stroke-width="2"/>')
+    r_ = t * .25
+    cap = f"M{f(xk + L * .012)},{f(-t * .66)}H{f(-L + r_)}Q{f(-L)},{f(-t * .66)} {f(-L)},{f(-t * .4)}V{f(t * .4)}Q{f(-L)},{f(t * .66)} {f(-L + r_)},{f(t * .66)}H{f(xk + L * .012)}Z"
+    o.append(f'<path d="{cap}" fill="#1c1c1c" stroke="#050505" stroke-width="1.8"/>')
+    o.append(f'<path d="M{f(xk + L * .008)},{f(-t * .5)}H{f(-L + r_)}Q{f(-L + 2.5)},{f(-t * .5)} {f(-L + 2.5)},{f(-t * .25)}" fill="none" stroke="#bdbdbd" stroke-width="1.3"/>')
+    return "".join(o)
+
+
 def katana_ink(x0, x1, cy, t):
     """A horizontal katana inked like a manga panel: hard black lines with a white rim,
     flat grey steel with a light back and a white edge bevel, scratches and chips,
@@ -548,7 +678,7 @@ def underneath(total, weeks):
         by, gh, fs, sy, sh, ml, foot = 778, 230, 14, 862, 46, 888, 936
 
     o.append(f'<g id="divider"><rect x="{40 if MOBILE else x0}" y="{div[1] - 40}" width="{div[0] - (40 if MOBILE else x0)}" height="80" fill="#050505" opacity="0"/>'
-             f'{katana_ink(40 if MOBILE else x0, div[0], div[1], 15 if MOBILE else 21)}</g>')
+             f'<g transform="translate({div[0]} {div[1]})">{katana_v(div[0] - (40 if MOBILE else x0), 13 if MOBILE else 19, rim=True)}</g></g>')
 
     # the year as a 3D ink skyline: one block per day, rising in week by week
     if MOBILE:
@@ -740,7 +870,7 @@ def build(total, weeks):
 </g>
 {"".join(debris)}
 <g class="glint" style="transform-origin:{f(gx)}px 8px"><path d="M{f(gx)},-18Q{f(gx+3)},5 {f(gx+26)},8Q{f(gx+3)},11 {f(gx)},34Q{f(gx-3)},11 {f(gx-26)},8Q{f(gx-3)},5 {f(gx)},-18Z" fill="#111"/></g>
-<g class="sword"><rect class="trail" x="-1100" y="-6" width="480" height="12" fill="url(#streak)"/>{katana()}<g clip-path="url(#bclip)"><rect class="bglint" x="-560" y="-14" width="90" height="28" fill="url(#bg)"/></g></g>
+<g class="sword"><rect class="trail" x="-1100" y="-6" width="480" height="12" fill="url(#streak)"/>{katana_v(616, 18)}<g clip-path="url(#bclip)"><rect class="bglint" x="-560" y="-14" width="90" height="28" fill="url(#bg)"/></g></g>
 <g class="impact"><rect x="-20" y="-20" width="{W + 40}" height="{H + 40}" fill="#000"/>{focus(mid[0], mid[1], W * .25, H * .2, 200, "#fff")}{slash(22, "#fff", 3)}{starburst(mid[0], mid[1], 16, 170, 26, "#fff")}{specks}</g>
 <g class="kira"><rect x="-20" y="-20" width="{W + 40}" height="{H + 40}" fill="#fff"/>{slash(9, "#000", 1)}{starburst(mid[0], mid[1], 10, 120, 22, "none", "#000")}</g>"""
 
