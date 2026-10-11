@@ -5,8 +5,6 @@
   </picture></a>
 </p>
 
-<p align="center"><a href="https://atharvalakhe.github.io/AtharvaLakhe/"><b>Open the interactive version</b></a>: hover any day, replay the cut.</p>
-
 <p align="center">
   <img src="https://img.shields.io/badge/Kotlin-0d0d0d?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin">
   <img src="https://img.shields.io/badge/Jetpack_Compose-0d0d0d?style=for-the-badge&logo=jetpackcompose&logoColor=white" alt="Jetpack Compose">
