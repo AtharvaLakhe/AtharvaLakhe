@@ -437,7 +437,7 @@ def katana_v(L, t, rim=False, seed=5):
     cap = f"M{f(xk + L * .012)},{f(-t * .66)}H{f(-L + r_)}Q{f(-L)},{f(-t * .66)} {f(-L)},{f(-t * .4)}V{f(t * .4)}Q{f(-L)},{f(t * .66)} {f(-L + r_)},{f(t * .66)}H{f(xk + L * .012)}Z"
     o.append(f'<path d="{cap}" fill="#1c1c1c" stroke="#050505" stroke-width="1.8"/>')
     o.append(f'<path d="M{f(xk + L * .008)},{f(-t * .5)}H{f(-L + r_)}Q{f(-L + 2.5)},{f(-t * .5)} {f(-L + 2.5)},{f(-t * .25)}" fill="none" stroke="#bdbdbd" stroke-width="1.3"/>')
-    return "".join(o)
+    return f'<g transform="translate(0 {f(-tip[1])})">{"".join(o)}</g>'
 
 
 def katana_ink(x0, x1, cy, t):
@@ -768,7 +768,8 @@ def build(total, weeks):
         return f"{at[i]}{{{body}" + (f";animation-timing-function:{ease[i]}" if ease[i] else "") + "}"
     pos = [along(s0 + (s1 - s0) * v) for v in q]
     fall = "".join(stop(i, f"transform:translate({f(x)}px,{f(y)}px) rotate({ANGLE:.2f}deg) scale({KS})") for i, (x, y) in enumerate(pos))
-    slit = "".join(stop(i, f"stroke-dashoffset:{1 - v:.3f}") for i, v in enumerate(q))
+    lag = 45  # the cut trails just behind the point, hidden under the blade
+    slit = "".join(stop(i, f"stroke-dashoffset:{min(1, 1 - (v * (s1 - s0) - lag) / (s1 - s0)):.4f}") for i, v in enumerate(q))
     p0, p1 = along(s0), along(s1)
 
     # the delayed cut: the right half slides down the line, holds, then tears away
@@ -870,7 +871,7 @@ def build(total, weeks):
 </g>
 {"".join(debris)}
 <g class="glint" style="transform-origin:{f(gx)}px 8px"><path d="M{f(gx)},-18Q{f(gx+3)},5 {f(gx+26)},8Q{f(gx+3)},11 {f(gx)},34Q{f(gx-3)},11 {f(gx-26)},8Q{f(gx-3)},5 {f(gx)},-18Z" fill="#111"/></g>
-<g class="sword"><rect class="trail" x="-1100" y="-6" width="480" height="12" fill="url(#streak)"/>{katana_v(616, 18)}<g clip-path="url(#bclip)"><rect class="bglint" x="-560" y="-14" width="90" height="28" fill="url(#bg)"/></g></g>
+<g class="sword"><rect class="trail" x="-1100" y="-6" width="480" height="12" fill="url(#streak)"/>{katana_v(616, 18)}</g>
 <g class="impact"><rect x="-20" y="-20" width="{W + 40}" height="{H + 40}" fill="#000"/>{focus(mid[0], mid[1], W * .25, H * .2, 200, "#fff")}{slash(22, "#fff", 3)}{starburst(mid[0], mid[1], 16, 170, 26, "#fff")}{specks}</g>
 <g class="kira"><rect x="-20" y="-20" width="{W + 40}" height="{H + 40}" fill="#fff"/>{slash(9, "#000", 1)}{starburst(mid[0], mid[1], 10, 120, 22, "none", "#000")}</g>"""
 
