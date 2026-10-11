@@ -371,10 +371,6 @@ def katana_ink(x0, x1, cy, t):
         o.append(f'<path d="M{f(xx - 3)},{f(yy + .5)}L{f(xx)},{f(yy - t * .14)}L{f(xx + 3.5)},{f(yy + .5)}Z" fill="#0b0b0b"/>')
     o.append(f'<path d="M{pts(blade)}Z" fill="none" stroke="#050505" stroke-width="2.4" stroke-linejoin="round"/>')
     o.append(f'<path d="M{f(X(.968))},{f(mune(.968))}L{f(X(.958))},{f(edge(.958))}" stroke="#050505" stroke-width="1.4"/>')
-    gx, gy = X(.8), lvl(.8, .55)
-    o.append(f'<path d="M{f(gx)},{f(gy - t * .7)}Q{f(gx + 1)},{f(gy - 1)} {f(gx + t * 1.1)},{f(gy)}Q{f(gx + 1)},{f(gy + 1)} {f(gx)},{f(gy + t * .7)}'
-             f'Q{f(gx - 1)},{f(gy + 1)} {f(gx - t * 1.1)},{f(gy)}Q{f(gx - 1)},{f(gy - 1)} {f(gx)},{f(gy - t * .7)}Z" fill="#fff"/>')
-    o.append(f'<rect class="hdglint" x="{f(X(b0))}" y="{f(cy - t)}" width="{f(L * .06)}" height="{f(t * 2)}" fill="url(#bg)" opacity=".6" clip-path="url(#hdclip)"/>')
     o.append(f'<clipPath id="hdclip"><path d="M{pts(blade)}Z"/></clipPath>')
 
     # collar, washers and an angular guard with its side face showing
