@@ -390,48 +390,60 @@ def underneath(total, weeks):
     facts = [(str(longest), "longest streak, days"), (str(current), "current streak, days"),
              (str(best["contributionCount"]), f"best day, {bd.day} {bd:%b}"), (str(months[top_month]), f"busiest month, {tm:%b}")]
     o = [f'<rect width="{W}" height="{H}" fill="#050505"/>']
+    links = {"Security4Her": "https://security4her.vercel.app", "PSR-Net": "https://github.com/AtharvaLakhe/PSR-Net",
+             "SPARC": "https://github.com/AtharvaLakhe/SPARC", "CarbonLedger": "https://github.com/AtharvaLakhe/CarbonLedger",
+             "FancePro": "https://github.com/AtharvaLakhe/FancePro", "LancePro": "https://github.com/AtharvaLakhe/LancePro"}
+    me = ' data-href="https://github.com/AtharvaLakhe"'
+    mail = ' data-href="mailto:atharvalakhe09@gmail.com"'
+
+    def W_(x, y, names, size, spacing):
+        spans = " ".join(f'<tspan data-href="{links[n_]}">{n_}</tspan>' for n_ in names)
+        o.append(f'<text x="{x}" y="{y}" font-family="S" font-size="{size}" fill="#ececec" word-spacing="{spacing}">{spans}</text>')
     T = lambda x, y, txt, fam, size, fill, anchor="start", extra="": o.append(
         f'<text x="{f(x)}" y="{f(y)}" font-family="{fam}" font-size="{size}" text-anchor="{anchor}" fill="{fill}"{extra}>{esc(txt)}</text>')
 
     if MOBILE:
         x0, x1 = 64, 680
-        T(40, 122, "ATHARVA LAKHE", "N", 58, "#fff", extra=' letter-spacing="4"')
+        T(40, 122, "ATHARVA LAKHE", "N", 58, "#fff", extra=' letter-spacing="4"' + me)
         T(40, 170, "Builds software that shows its work.", "S", 25, "#a3a3a3")
         for i, r in enumerate(roles):
             T(40, 228 + i * 38, r, "S", 25, "#d6d6d6")
         div = (680, 370, (680 - 40) / 616)
         T(40, 430, "Works", "S", 19, "#777")
-        T(40, 468, " ".join(works[:3]), "S", 25, "#ececec", extra=' word-spacing="14"')
-        T(40, 504, " ".join(works[3:]), "S", 25, "#ececec", extra=' word-spacing="14"')
-        T(40, 546, "atharvalakhe09@gmail.com", "S", 24, "#a3a3a3")
+        W_(40, 468, works[:3], 25, 14)
+        W_(40, 504, works[3:], 25, 14)
+        T(40, 546, "atharvalakhe09@gmail.com", "S", 24, "#a3a3a3", extra=mail)
         T(40, 676, f"{total:,}", "N", 76, "#fff")
         T(40, 712, "contributions in the last year", "S", 24, "#8a8a8a")
         for i, (value, label) in enumerate(facts):
             x, y = 40 + (i % 2) * 330, 790 + (i // 2) * 100
-            o.append(f'<path d="M{x - 2},{y - 46}V{y + 34}" stroke="#2a2a2a"/>')
+            o.append(f'<g data-stat="{["longest", "current", "best", "month"][i]}"><rect x="{x}" y="{y - 50}" width="320" height="90" fill="#050505"/><path d="M{x - 2},{y - 46}V{y + 34}" stroke="#2a2a2a"/>')
             T(x + 16, y, value, "N", 46, "#fff")
             T(x + 16, y + 30, label, "S", 21, "#8a8a8a")
+            o.append("</g>")
         by, gh, fs, sy, sh, ml, foot = 1150, 170, 19, 1254, 56, 1288, 1372
     else:
         x0, x1 = 80, 1120
-        T(x0, 138, "ATHARVA LAKHE", "N", 68, "#fff", extra=' letter-spacing="7"')
+        T(x0, 138, "ATHARVA LAKHE", "N", 68, "#fff", extra=' letter-spacing="7"' + me)
         T(x0, 192, "Builds software that shows its work.", "S", 25, "#a3a3a3")
         for i, r in enumerate(roles):
             T(x1, 92 + i * 30, r, "S", 21, "#d6d6d6", "end")
         div = (x1, 250, (x1 - x0) / 616)
         T(x0, 316, "Works", "S", 18, "#777")
-        T(x0 + 76, 316, " ".join(works), "S", 21, "#ececec", extra=' word-spacing="22"')
-        T(x1, 192, "atharvalakhe09@gmail.com", "S", 20, "#a3a3a3", "end")
+        W_(x0 + 76, 316, works, 21, 22)
+        T(x1, 192, "atharvalakhe09@gmail.com", "S", 20, "#a3a3a3", "end", mail)
         T(x0, 430, f"{total:,}", "N", 68, "#fff")
         T(x0, 462, "contributions in the last year", "S", 20, "#8a8a8a")
         for i, (value, label) in enumerate(facts):
             x = 470 + i * 170
-            o.append(f'<path d="M{x - 18},386V462" stroke="#2a2a2a"/>')
+            o.append(f'<g data-stat="{["longest", "current", "best", "month"][i]}"><rect x="{x - 14}" y="382" width="164" height="84" fill="#050505"/><path d="M{x - 18},386V462" stroke="#2a2a2a"/>')
             T(x, 426, value, "N", 38, "#fff")
             T(x, 454, label, "S", 15, "#8a8a8a")
+            o.append("</g>")
         by, gh, fs, sy, sh, ml, foot = 778, 230, 14, 862, 46, 888, 936
 
-    o.append(katana_hd(40 if MOBILE else x0, div[0], div[1], 11 if MOBILE else 15))
+    o.append(f'<g id="divider"><rect x="{40 if MOBILE else x0}" y="{div[1] - 40}" width="{div[0] - (40 if MOBILE else x0)}" height="80" fill="#050505" opacity="0"/>'
+             f'{katana_hd(40 if MOBILE else x0, div[0], div[1], 11 if MOBILE else 15)}</g>')
 
     # the year as a 3D ink skyline: one block per day, rising in week by week
     if MOBILE:
@@ -459,7 +471,8 @@ def underneath(total, weeks):
         if h:
             faces += f'<path d="M{pts([D, C, up(C), up(D)])}Z" fill="{rights[lv]}"/><path d="M{pts([A, D, up(D), up(A)])}Z" fill="{lefts[lv]}"/>'
         faces += f'<path d="M{pts([up(A), up(Bq), up(C), up(D)])}Z" fill="{"#fff" if d is best else tops[lv]}"/>'
-        o.append(f'<g class="blk" style="transform-origin:{f(bx)}px {f(bb + ey)}px;animation-delay:{TS + .6 + c * .03 + r * .01:.2f}s">{faces}</g>')
+        o.append(f'<g class="blk" data-d="{d["date"]}" data-n="{n}"{' data-best="1"' if d is best else ""} '
+                 f'style="transform-origin:{f(bx)}px {f(bb + ey)}px;animation-delay:{TS + .6 + c * .03 + r * .01:.2f}s">{faces}</g>')
     # months along the front edge, set at the skyline's angle
     ang = -math.degrees(math.atan2(dy, dx))
     seen, lastcol = None, -9
@@ -467,7 +480,7 @@ def underneath(total, weeks):
         m = dt.date.fromisoformat(w["contributionDays"][0]["date"]).month
         if m != seen and c - lastcol > (4 if MOBILE else 2) and c < len(weeks) - 2:
             lx_, ly_ = ox + c * dx + 7 * ex + 4, oy - c * dy + 7 * ey + fs + 4
-            o.append(f'<text x="{f(lx_)}" y="{f(ly_)}" transform="rotate({ang:.1f} {f(lx_)} {f(ly_)})" font-family="S" font-size="{fs}" fill="#8a8a8a">{dt.date(2000, m, 1):%b}</text>')
+            o.append(f'<text x="{f(lx_)}" y="{f(ly_)}" transform="rotate({ang:.1f} {f(lx_)} {f(ly_)})" font-family="S" font-size="{fs}" fill="#8a8a8a" data-month="{w['contributionDays'][0]['date'][:7]}">{dt.date(2000, m, 1):%b}</text>')
             lastcol = c
         seen = m
     # the best day gets a label above its block
@@ -585,6 +598,7 @@ def build(total, weeks):
 @keyframes grow{{from{{transform:scaleY(0)}}to{{transform:scaleY(1)}}}}
 .peak{{animation:hide .5s ease-out {TS + 2.4}s reverse both}}
 {"".join(dcss)}
+.paper,.sword,.impact,.kira,.pl,.glint,[class^=db]{{pointer-events:none}}
 @media (prefers-reduced-motion:reduce){{.paper,.sword,.slit,.glint,.impact,.kira,.pl,[class^=db]{{display:none}}.blk,.drop,.peak,.hdglint{{animation:none}}}}"""
 
     gx = along(4)[0]
@@ -610,7 +624,7 @@ def build(total, weeks):
     specks = "".join(f'<circle cx="{f(mid[0] + math.cos(a) * r)}" cy="{f(mid[1] + math.sin(a) * r * .8)}" r="{f(rnd.uniform(1.2, 3.4))}" fill="#fff"/>'
                      for a, r in ((rnd.uniform(0, 6.3), rnd.uniform(120, max(W, H) * .4)) for _ in range(44)))
     body = f"""{underneath(total, weeks)}
-<rect x="-40" y="-40" width="{W + 80}" height="{H + 80}" filter="url(#grain)" opacity=".05"/>
+<rect x="-40" y="-40" width="{W + 80}" height="{H + 80}" filter="url(#grain)" pointer-events="none" opacity=".05"/>
 <g class="paper shake">
 <use class="whole" href="#sheet"/>
 <g class="lp"><g clip-path="url(#lc)"><use href="#sheet"/>{"".join(drops[-1])}</g><g class="rim">{lrim}</g></g>

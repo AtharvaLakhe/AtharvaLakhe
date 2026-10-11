@@ -1,9 +1,11 @@
 <p align="center">
-  <picture>
+  <a href="https://atharvalakhe.github.io/AtharvaLakhe/"><picture>
     <source media="(max-width: 700px)" srcset="katana/banner-mobile.svg">
     <img src="katana/banner.svg" width="100%" alt="Atharva Lakhe. A katana falls and cuts an ink-brushed page, which tears away to show my details and a year of contributions.">
-  </picture>
+  </picture></a>
 </p>
+
+<p align="center"><a href="https://atharvalakhe.github.io/AtharvaLakhe/"><b>Open the interactive version</b></a>: hover any day, replay the cut.</p>
 
 <p align="center">
   <a href="https://security4her.vercel.app">Security4Her</a>&nbsp;&nbsp;&nbsp;

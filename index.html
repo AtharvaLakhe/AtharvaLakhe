@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atharva Lakhe</title>
+<meta name="description" content="Atharva Lakhe builds software that shows its work. Android and Wear OS, satellite imagery, AI agents.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #000; --ink: #f2f2f2; --muted: #8a8a8a; --line: #2e2e2e; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: "Shippori Mincho", Georgia, serif; }
+  body { display: grid; place-items: center; min-height: 100vh; overflow-x: hidden; }
+  #stage { width: min(100vw, calc((100vh - 64px) * 1.25)); perspective: 1600px; padding: 0 0 56px; }
+  #stage.mobile { width: 100vw; }
+  #tilt { transition: transform .25s ease-out; transform-style: preserve-3d; }
+  #tilt svg { display: block; width: 100%; height: auto; }
+  #loading { color: var(--muted); font-size: 15px; letter-spacing: .08em; padding: 40vh 0; text-align: center; }
+
+  /* the page reacts to the pointer */
+  svg [data-href] { cursor: pointer; transition: fill .15s; }
+  svg [data-href]:hover { fill: #fff; text-decoration: underline; }
+  svg #divider { cursor: pointer; }
+  svg #divider:hover { filter: brightness(1.25); }
+  svg [data-stat] { cursor: pointer; }
+  svg [data-stat]:hover > text:first-of-type, svg [data-stat].on > text:first-of-type { text-decoration: underline; }
+  svg [data-month] { cursor: pointer; }
+  svg [data-month]:hover { fill: #fff; }
+  svg .blk { transition: opacity .18s; cursor: crosshair; }
+  svg.focus .blk:not(.hot) { opacity: .22; }
+  svg .blk.hot path { filter: brightness(1.35); }
+
+  #tip { position: fixed; pointer-events: none; z-index: 10; padding: 8px 12px 9px; background: #050505; border: 1px solid #d8d8d8;
+         font-size: 15px; line-height: 1.35; white-space: nowrap; opacity: 0; transform: translate(-50%, calc(-100% - 14px)); transition: opacity .12s; }
+  #tip b { font-weight: 800; font-size: 19px; }
+  #tip span { color: var(--muted); }
+
+  #bar { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); display: flex; gap: 8px; z-index: 5; }
+  #bar button, #bar a { font: 500 15px "Shippori Mincho", Georgia, serif; color: var(--ink); background: #0b0b0b; border: 1px solid var(--line);
+         padding: 8px 16px; cursor: pointer; text-decoration: none; transition: border-color .15s, background .15s; }
+  #bar button:hover, #bar a:hover { border-color: #bdbdbd; background: #141414; }
+  #bar :focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  #hint { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); color: var(--muted); font-size: 14px; letter-spacing: .04em;
+          opacity: 0; transition: opacity .6s; pointer-events: none; text-align: center; padding: 0 16px; }
+  #hint.on { opacity: 1; }
+  .slashmark { pointer-events: none; }
+  @media (prefers-reduced-motion: reduce) { #tilt { transition: none; } }
+</style>
+</head>
+<body>
+<main id="stage"><div id="tilt"><div id="loading">Unsheathing…</div></div></main>
+<div id="tip" role="status" aria-live="polite"></div>
+<p id="hint">Hover the skyline, the months and the numbers. Click the katana to replay.</p>
+<nav id="bar" aria-label="Controls">
+  <button id="replay" type="button">Replay</button>
+  <button id="skip" type="button">Skip intro</button>
+  <a href="https://github.com/AtharvaLakhe">GitHub</a>
+</nav>
+<script>
+(() => {
+  const mobile = matchMedia('(max-width: 700px)').matches;
+  const stage = document.getElementById('stage'), tilt = document.getElementById('tilt');
+  const tip = document.getElementById('tip'), hint = document.getElementById('hint');
+  if (mobile) stage.classList.add('mobile');
+  const fmt = iso => new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
+  const monthName = ym => new Date(ym + '-01T00:00:00').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  const plural = n => `${n} contribution${n === 1 ? '' : 's'}`;
+
+  fetch(mobile ? 'katana/banner-mobile.svg' : 'katana/banner.svg', { cache: 'no-cache' })
+    .then(r => r.text())
+    .then(text => { tilt.innerHTML = text; init(tilt.querySelector('svg')); })
+    .catch(() => { tilt.innerHTML = '<div id="loading">Could not load the banner. Refresh to try again.</div>'; });
+
+  function init(svg) {
+    svg.removeAttribute('width'); svg.removeAttribute('height');
+    const blocks = [...svg.querySelectorAll('.blk[data-d]')].map(el => ({ el, d: el.dataset.d, n: +el.dataset.n, m: el.dataset.d.slice(0, 7) }))
+      .sort((a, b) => a.d < b.d ? -1 : 1);
+    const anims = () => svg.getAnimations({ subtree: true }).filter(a => a.effect && a.effect.getComputedTiming().iterations !== Infinity);
+    const total = () => Math.max(...anims().map(x => { const t = x.effect.getComputedTiming(); return t.delay + t.activeDuration; }));
+    setTimeout(() => hint.classList.add('on'), Math.min(total() + 300, 9000));
+    setTimeout(() => hint.classList.remove('on'), Math.min(total() + 300, 9000) + 6000);
+
+    // tooltip
+    const show = (html, x, y) => { tip.innerHTML = html; tip.style.left = x + 'px'; tip.style.top = y + 'px'; tip.style.opacity = 1; };
+    const hide = () => { tip.style.opacity = 0; };
+    const light = set => { svg.classList.toggle('focus', !!set); blocks.forEach(b => b.el.classList.toggle('hot', !!set && set.has(b))); };
+
+    blocks.forEach(b => {
+      b.el.addEventListener('pointerenter', e => { light(new Set([b])); show(`<b>${b.n}</b> <span>${b.n === 1 ? 'contribution' : 'contributions'}</span><br>${fmt(b.d)}`, e.clientX, e.clientY); });
+      b.el.addEventListener('pointermove', e => { tip.style.left = e.clientX + 'px'; tip.style.top = e.clientY + 'px'; });
+      b.el.addEventListener('pointerleave', () => { light(null); hide(); });
+    });
+
+    // months light up their weeks
+    svg.querySelectorAll('[data-month]').forEach(el => {
+      const ym = el.dataset.month, set = new Set(blocks.filter(b => b.m === ym)), sum = [...set].reduce((s, b) => s + b.n, 0);
+      el.addEventListener('pointerenter', e => { light(set); const r = el.getBoundingClientRect(); show(`<b>${sum}</b> <span>in</span> ${monthName(ym)}`, r.left + r.width / 2, r.top); });
+      el.addEventListener('pointerleave', () => { light(null); hide(); });
+    });
+
+    // the numbers show where they come from
+    const streaks = () => {
+      let best = [], run = [];
+      blocks.forEach(b => { if (b.n) { run.push(b); if (run.length > best.length) best = run.slice(); } else run = []; });
+      let cur = [];
+      for (let i = blocks.length - 1; i >= 0; i--) { if (blocks[i].n) cur.unshift(blocks[i]); else if (i === blocks.length - 1) continue; else break; }
+      return { longest: best, current: cur };
+    };
+    const months = {};
+    blocks.forEach(b => months[b.m] = (months[b.m] || 0) + b.n);
+    const topMonth = Object.keys(months).sort((a, b) => months[b] - months[a])[0];
+    const bestDay = blocks.find(b => b.el.dataset.best) || blocks.reduce((a, b) => b.n > a.n ? b : a);
+    const sets = {
+      longest: () => streaks().longest, current: () => streaks().current,
+      best: () => [bestDay], month: () => blocks.filter(b => b.m === topMonth),
+    };
+    const words = {
+      longest: s => `<b>${s.length}</b> <span>days in a row, from</span> ${fmt(s[0].d)}`,
+      current: s => `<b>${s.length}</b> <span>days and counting, since</span> ${fmt(s[0].d)}`,
+      best: s => `<b>${s[0].n}</b> <span>contributions on</span> ${fmt(s[0].d)}`,
+      month: s => `<b>${months[topMonth]}</b> <span>in</span> ${monthName(topMonth)}`,
+    };
+    let pinned = null;
+    svg.querySelectorAll('[data-stat]').forEach(g => {
+      const k = g.dataset.stat;
+      const on = () => { const s = sets[k](); if (!s.length) return; light(new Set(s)); const r = g.getBoundingClientRect(); show(words[k](s), r.left + r.width / 2, r.top); };
+      g.addEventListener('pointerenter', on);
+      g.addEventListener('pointerleave', () => { if (pinned !== g) { light(null); hide(); } });
+      g.addEventListener('click', () => {
+        svg.querySelectorAll('[data-stat].on').forEach(x => x.classList.remove('on'));
+        if (pinned === g) { pinned = null; light(null); hide(); return; }
+        pinned = g; g.classList.add('on'); on();
+      });
+    });
+
+    // links
+    svg.querySelectorAll('[data-href]').forEach(el => el.addEventListener('click', e => {
+      e.stopPropagation(); const href = el.dataset.href;
+      href.startsWith('mailto:') ? (location.href = href) : window.open(href, '_blank', 'noopener');
+    }));
+
+    // replay and skip
+    const replay = () => { hide(); light(null); svg.getAnimations({ subtree: true }).forEach(a => { a.cancel(); a.play(); }); };
+    const skip = () => anims().forEach(a => { try { a.finish(); } catch (_) {} });
+    svg.querySelector('#divider').addEventListener('click', e => { e.stopPropagation(); replay(); });
+    document.getElementById('replay').onclick = replay;
+    document.getElementById('skip').onclick = skip;
+    addEventListener('keydown', e => {
+      if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); replay(); }
+      if (e.key === 'Escape') { pinned = null; light(null); hide(); }
+    });
+
+    // click empty space: a brush slash where you clicked
+    const NS = 'http://www.w3.org/2000/svg';
+    svg.addEventListener('click', e => {
+      if (e.target.closest('.blk,[data-stat],[data-href],[data-month],#divider')) return;
+      const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+      const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+      const a = (-35 + Math.random() * 20) * Math.PI / 180, len = 90 + Math.random() * 70, w = 5 + Math.random() * 4;
+      const ux = Math.cos(a), uy = Math.sin(a), nx = -uy, ny = ux;
+      const P = t => [p.x + ux * len * (t - .5), p.y + uy * len * (t - .5)];
+      const top = [], bot = [];
+      for (let i = 0; i <= 24; i++) { const t = i / 24, k = Math.pow(Math.sin(Math.PI * t), .6) * w, [x, y] = P(t); top.push([x + nx * k, y + ny * k]); bot.push([x - nx * k * .4, y - ny * k * .4]); }
+      const path = document.createElementNS(NS, 'path');
+      path.setAttribute('d', 'M' + top.concat(bot.reverse()).map(q => q.map(v => v.toFixed(1)).join(',')).join('L') + 'Z');
+      path.setAttribute('fill', '#fff'); path.setAttribute('class', 'slashmark');
+      svg.appendChild(path);
+      path.style.transformOrigin = `${P(0)[0]}px ${P(0)[1]}px`;
+      path.animate([{ transform: 'scale(0)', opacity: 1 }, { transform: 'scale(1)', opacity: 1, offset: .2 }, { transform: 'scale(1)', opacity: 0 }],
+                   { duration: 1100, easing: 'ease-out' }).onfinish = () => path.remove();
+    });
+
+  }
+})();
+</script>
+</body>
+</html>
