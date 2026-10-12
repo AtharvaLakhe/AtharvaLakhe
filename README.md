@@ -21,6 +21,10 @@
 </p>
 
 <p align="center">
+  <a href="https://discord.com/users/768465855709052988"><img src="https://lanyard.kyrie25.dev/api/768465855709052988?imgStyle=square&useDisplayName=true&theme=dark&bg=0d0d0d&borderRadius=6px" alt="Discord status"></a>
+</p>
+
+<p align="center">
   <img src="https://github-stats-extended.vercel.app/api?username=AtharvaLakhe&include_all_commits=true&show_icons=true&count_private=true&custom_title=GitHub+Stats&bg_color=0d0d0d&title_color=ffffff&text_color=c9c9c9&icon_color=ffffff&hide_border=true" width="400" alt="GitHub stats">
   <img src="https://github-stats-extended.vercel.app/api/top-langs?username=AtharvaLakhe&layout=compact&langs_count=8&card_width=415&bg_color=0d0d0d&title_color=ffffff&text_color=c9c9c9&hide_border=true" height="167" alt="Top languages">
 </p>
