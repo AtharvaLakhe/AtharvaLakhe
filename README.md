@@ -21,6 +21,15 @@
 </p>
 
 <p align="center">
+  <img src="https://github-stats-extended.vercel.app/api?username=AtharvaLakhe&include_all_commits=true&show_icons=true&count_private=true&custom_title=GitHub+Stats&bg_color=0d0d0d&title_color=ffffff&text_color=c9c9c9&icon_color=ffffff&hide_border=true" width="400" alt="GitHub stats">
+  <img src="https://github-stats-extended.vercel.app/api/top-langs?username=AtharvaLakhe&layout=compact&langs_count=8&card_width=415&bg_color=0d0d0d&title_color=ffffff&text_color=c9c9c9&hide_border=true" height="167" alt="Top languages">
+</p>
+
+<p align="center">
+  <img src="https://streak-stats.demolab.com?user=AtharvaLakhe&background=0d0d0d&border=0d0d0d&ring=ffffff&fire=ffffff&currStreakNum=ffffff&sideNums=ffffff&currStreakLabel=c9c9c9&sideLabels=c9c9c9&dates=8b8b8b&stroke=333333" alt="Contribution streak">
+</p>
+
+<p align="center">
   <a href="https://security4her.vercel.app">Security4Her</a>&nbsp;&nbsp;&nbsp;
   <a href="https://github.com/AtharvaLakhe/PSR-Net">PSR-Net</a>&nbsp;&nbsp;&nbsp;
   <a href="https://github.com/AtharvaLakhe/SPARC">SPARC</a>&nbsp;&nbsp;&nbsp;
