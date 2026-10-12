@@ -1,0 +1,37 @@
+name: inkgraph
+on:
+  schedule:
+    - cron: "0 19 * * *"   # 00:30 IST
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: inkgraph
+  cancel-in-progress: true
+jobs:
+  draw:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: AtharvaLakhe/inkgraph@v1
+        with:
+          name: Atharva Lakhe
+          tagline: Builds software that shows its work.
+          roles: Android and Wear OS, Satellite imagery, AI agents
+          works: >-
+            Security4Her=https://security4her.vercel.app,
+            inkgraph=https://github.com/AtharvaLakhe/inkgraph,
+            Commit Manga=https://github.com/AtharvaLakhe/commit-manga,
+            Then & Now=https://github.com/AtharvaLakhe/then-and-now,
+            PSR-Net=https://github.com/AtharvaLakhe/PSR-Net,
+            SPARC=https://github.com/AtharvaLakhe/SPARC
+          email: atharvalakhe09@gmail.com
+          footer: Team OBSIDIAN
+      - name: Commit the new banner
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add inkgraph
+          git diff --staged --quiet || git commit -m "inkgraph: redraw"
+          git pull --rebase
+          git push
