@@ -1,17 +1,9 @@
 <p align="center">
-  <a href="https://atharvalakhe.github.io/inkgraph/play.html?u=AtharvaLakhe"><picture>
-    <source media="(max-width: 700px)" srcset="inkgraph/inkgraph-mobile.svg">
-    <img src="inkgraph/inkgraph.svg" width="100%" alt="Atharva Lakhe. A katana falls and cuts an ink-brushed page, which tears away to show my details and a year of contributions.">
+  <a href="https://atharvalakhe.github.io/AtharvaLakhe/"><picture>
+    <source media="(max-width: 700px)" srcset="katana/banner-mobile.svg">
+    <img src="katana/banner.svg" width="100%" alt="Atharva Lakhe. A katana falls and cuts an ink-brushed page, which tears away to show my details and a year of contributions.">
   </picture></a>
 </p>
-
-<table align="center">
-<tr>
-<td width="33%" valign="top"><a href="https://github.com/AtharvaLakhe/inkgraph"><b>inkgraph</b></a><br><sub>The banner above, as a GitHub Action anyone can use. A katana cuts the page, your year rises in ink.</sub></td>
-<td width="33%" valign="top"><a href="https://atharvalakhe.github.io/commit-manga/"><b>Commit Manga</b></a><br><sub>Paste any repo, get its history drawn as a manga page: the founder, the crew, the drama, the release.</sub></td>
-<td width="33%" valign="top"><a href="https://atharvalakhe.github.io/then-and-now/"><b>Then &amp; Now</b></a><br><sub>Drag a line across any place on Earth and watch it change, in satellite mosaics from 2016 to 2024.</sub></td>
-</tr>
-</table>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Kotlin-0d0d0d?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin">
@@ -48,8 +40,5 @@
   <a href="https://github.com/AtharvaLakhe/CarbonLedger">CarbonLedger</a>&nbsp;&nbsp;&nbsp;
   <a href="https://github.com/AtharvaLakhe/FancePro">FancePro</a>&nbsp;&nbsp;&nbsp;
   <a href="https://github.com/AtharvaLakhe/LancePro">LancePro</a>&nbsp;&nbsp;&nbsp;
-  <a href="https://github.com/AtharvaLakhe/inkgraph">inkgraph</a>&nbsp;&nbsp;&nbsp;
-  <a href="https://github.com/AtharvaLakhe/commit-manga">Commit Manga</a>&nbsp;&nbsp;&nbsp;
-  <a href="https://github.com/AtharvaLakhe/then-and-now">Then &amp; Now</a>&nbsp;&nbsp;&nbsp;
   <a href="mailto:atharvalakhe09@gmail.com">Email</a>
 </p>
