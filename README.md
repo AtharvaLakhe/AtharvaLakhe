@@ -5,6 +5,23 @@
   </picture></a>
 </p>
 
+## Tools you can try
+
+I build browser tools, Kotlin/Android software and satellite visualizations. Start with a live demo:
+
+| Project | What you can do | Try it |
+| --- | --- | --- |
+| **[SVG Scan](https://github.com/AtharvaLakhe/SVG_Scan)** | Trace images into editable SVG and export React, Vue or Android code. Processing stays in your browser. | [Open the studio](https://atharvalakhe.github.io/SVG_Scan/) |
+| **[Obsidian](https://github.com/AtharvaLakhe/baize-club)** | Play 3D snooker and 8-ball pool with friends through a private room link. | [Open a table](https://baize-club.vercel.app) |
+| **[Then & Now](https://github.com/AtharvaLakhe/then-and-now)** | Compare Sentinel-2 satellite mosaics from 2016 to 2024 with a draggable before/after view. | [Explore the map](https://atharvalakhe.github.io/then-and-now/) |
+
+## Open-source contributions
+
+- **[Apollo Kotlin](https://github.com/apollographql/apollo-kotlin/pull/7041)** — added GET support for schema introspection. Merged upstream.
+- **[Supabase Kotlin](https://github.com/supabase/supabase-kt/pull/1426)** — fixed OAuth query-error handling in the implicit flow on Android, Apple and web. Merged upstream.
+
+**[Follow my work](https://github.com/AtharvaLakhe)** for browser tools, Android development and experiments with open satellite data. Found something useful? A star helps me see what resonates; a reproducible bug report helps make it better.
+
 <p align="center">
   <img src="https://img.shields.io/badge/Kotlin-0d0d0d?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin">
   <img src="https://img.shields.io/badge/Jetpack_Compose-0d0d0d?style=for-the-badge&logo=jetpackcompose&logoColor=white" alt="Jetpack Compose">
